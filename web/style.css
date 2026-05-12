@@ -1,0 +1,107 @@
+/* global body */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* keeps footer at the bottom */
+}
+
+/* header, footer */
+header, footer {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+footer {
+    margin-top: auto; 
+}
+
+/* main container */
+.container {
+    width: 80%;
+    max-width: 900px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    margin-bottom: 30px;
+}
+
+table th, table td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+table th {
+    background-color: #34495e;
+    color: white;
+    font-weight: 600;
+}
+
+table tr:nth-child(even) {
+    background-color: #f8f9fa; 
+}
+
+table tr:hover {
+    background-color: #f1f2f6; 
+}
+
+/* forms, inputs */
+input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 20px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; 
+    font-size: 14px;
+}
+
+/* buttons */
+input[type="submit"], button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+input[type="submit"]:hover, button:hover {
+    background-color: #2980b9;
+}
+
+/* button colors admin table */
+.btn-edit { background-color: #f39c12 !important; }
+.btn-edit:hover { background-color: #d68910 !important; }
+
+.btn-delete { background-color: #e74c3c !important; }
+.btn-delete:hover { background-color: #c0392b !important; }
+
+/* error/warning boxes */
+.alert-box {
+    border-left: 5px solid red;
+    background-color: #ffeeee;
+    padding: 15px;
+    margin-bottom: 20px;
+}
