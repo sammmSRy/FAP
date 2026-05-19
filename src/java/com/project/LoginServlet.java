@@ -4,68 +4,92 @@ import java.io.*;
 import java.sql.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
+import com.project.warden.*;
 
 public class LoginServlet extends HttpServlet {
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String user = request.getParameter("username");
-        String pass = request.getParameter("password");
-        String userCaptcha = request.getParameter("user_captcha");
-
-        try {
-            if (user == null || pass == null || user.isEmpty() || pass.isEmpty()) {
-                throw new NullValueException("Credentials cannot be blank.");
-            }
-
-            // 1. Captcha Verification (Using Captcha2609 Logic)
-            HttpSession session = request.getSession();
-            String sessionCaptcha = (String) session.getAttribute("captchaVal");
+    Connection con;
+    static String dbClassPath, dbUsername, dbPassword, dbUri;
+    static byte[] key;
+    
+    public void init(ServletConfig config) throws ServletException
+    {
+        super.init(config);
+        
+        try
+        {
+            Class.forName(config.getInitParameter("ClassPath"));
+            String username = config.getInitParameter("Username"),
+                   password = config.getInitParameter("Password"),
+                   uri = new StringBuffer(config.getInitParameter("Protocol"))
+                             .append("://").append(config.getInitParameter("HostName"))
+                             .append(":").append(config.getInitParameter("Port"))
+                             .append("/LoginDB").toString();
             
-            if (sessionCaptcha == null || userCaptcha == null || !sessionCaptcha.equals(userCaptcha)) {
-                response.sendRedirect("error_captcha.jsp");
-                return;
-            }
-
-            // 2. Encryption Setup
-            String secretKey = getServletContext().getInitParameter("secretKey");
-            String cipherAlgorithm = getServletContext().getInitParameter("cipherAlgorithm");
-            String encryptedPass = CryptoUtil.encrypt(pass, secretKey, cipherAlgorithm);
-
-            // 3. Database Validation
-            String driver = getServletConfig().getInitParameter("dbDriver");
-            String url = getServletConfig().getInitParameter("dbURL");
-            String dbUser = getServletConfig().getInitParameter("dbUser");
-            String dbPass = getServletConfig().getInitParameter("dbPass");
-
-            Class.forName(driver);
-            Connection conn = DriverManager.getConnection(url, dbUser, dbPass);
+            dbUsername = username; dbPassword = password; dbUri = uri;
+            dbClassPath = config.getInitParameter("ClassPath");
+            key = config.getServletContext().getInitParameter("EncryptionKey").getBytes();
             
-            PreparedStatement ps = conn.prepareStatement("SELECT * FROM USERS WHERE username = ?");
-            ps.setString(1, user);
-            ResultSet rs = ps.executeQuery();
-
-            if (!rs.next()) {
-                if (pass.isEmpty()) response.sendRedirect("error_1.jsp");
-                else response.sendRedirect("error_3.jsp");
-            } else {
-                String dbPassValue = rs.getString("password");
-                String dbRole = rs.getString("role");
-
-                // Compare ENCRYPTED input against ENCRYPTED database value
-                if (dbPassValue.equals(encryptedPass)) {
-                    session.setAttribute("user", user);
-                    session.setAttribute("role", dbRole);
-                    response.sendRedirect("success.jsp");
-                } else {
-                    response.sendRedirect("error_2.jsp"); 
-                }
-            }
-            conn.close();
-        } catch (NullValueException e) {
-            response.sendRedirect("noLoginCredentials.jsp");
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect("error_4.jsp"); 
+            con = DriverManager.getConnection(uri, username, password);
         }
+        catch (SQLException e)
+        {
+            throw new ServletException(e); // cute bubbles
+        }
+        catch (ClassNotFoundException e)
+        {
+            System.err.println("Failed to get database driver manager!");
+            System.err.println(e.getMessage());
+        }
+    }
+    
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // parameters in post
+        // username, password
+        try
+        {
+            String uname =  request.getParameter("username").toLowerCase(),
+                    pwod = AuthenticationExtras.encrypt(request.getServletContext().getInitParameter("EncryptionKey").getBytes(), request.getParameter("password"));
+
+            //response.getWriter().println(pwod); return;
+
+            boolean yes = false;
+
+            if (uname.length() == 0 && pwod.length() == 0) throw new NullAuthenticationException();
+
+            try (PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE EMAIL = ?");)
+            {
+                pstm.setString(1, uname); ResultSet res = pstm.executeQuery();
+                while (res.next()) if (res.getString("PASSWORD").equals(pwod)) yes = true;
+                else throw new IncorrectPasswordException();
+            }
+            catch (SQLException e)
+            {
+                System.err.println("Error in authentication process!");
+                System.err.println(e.getMessage());
+            }
+            if (yes)
+            {
+                HttpSession sesh = request.getSession(false);
+                if (sesh != null)
+                {
+                    sesh.invalidate();
+                    response.sendRedirect("error_session.jsp");
+                    return;
+                }
+
+                sesh = request.getSession(true);
+                ServletContext cx = getServletContext();
+                cx.setAttribute("ClassPath", dbClassPath);
+                cx.setAttribute("Username", dbUsername);
+                cx.setAttribute("Password", dbPassword);
+                cx.setAttribute("Uri", dbUri);
+                sesh.setAttribute("username",uname);
+                sesh.setAttribute("captcha",0);
+                response.sendRedirect("captcha");
+            }
+            else throw new AuthenticationException();
+        }
+        catch (Exception e) { throw new ServletException(e); }
     }
 }

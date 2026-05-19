@@ -6,8 +6,8 @@
     response.setHeader("Pragma", "no-cache");
     response.setDateHeader("Expires", 0);
 
-    String user = (String) session.getAttribute("user");
-    String role = (String) session.getAttribute("role");
+    String user = (String) session.getAttribute("EMAIL");
+    String role = (String) session.getAttribute("USERROLE");
 
     if (user == null) {
         response.sendRedirect("error_session.jsp");
@@ -59,8 +59,8 @@
                         <% if (!dbUser.equals(user)) { %>
                             <form action="editUser.jsp" method="POST" style="display:inline;">
                                 <input type="hidden" name="targetUser" value="<%= dbUser %>">
-                                <input type="hidden" name="targetPass" value="<%= rs.getString("password") %>">
-                                <input type="hidden" name="targetRole" value="<%= rs.getString("role") %>">
+                                <input type="hidden" name="targetPass" value="<%= rs.getString("PASSWORD") %>">
+                                <input type="hidden" name="targetRole" value="<%= rs.getString("USERROLE") %>">
                                 <input type="submit" value="Edit" class="btn-edit">
                             </form>
 

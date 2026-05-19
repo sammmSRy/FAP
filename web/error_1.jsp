@@ -13,7 +13,7 @@
     <div class="container" style="text-align: center;">
         <div class="alert-box" style="text-align: left;">
             <h3>Login Error (Code: 1)</h3>
-            <p>The username entered does not exist in our database, and you left the password field empty.</p>
+            <p>The username entered does not exist in our database.</p>
         </div>
         <br>
         <a href="index.jsp"><button>Back to Login Page</button></a>

@@ -1,0 +1,264 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : 01-Mar-2026, 16:59:56
+    Author     : Adrian
+*/
+:root
+{
+    --normal: hsl(0,0%,50%);
+    --bright: hsl(0,0%,75%);
+    --brighter: hsl(0,0%,90%);
+    --dark: hsl(0,0%,40%);
+}
+
+
+html { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body
+{
+    display:grid;
+    grid-template-rows: 80px auto 40px; gap: 0 .1rem;
+    background-image: url('assets/bg.png');background-size: cover; background-attachment: fixed; background-repeat: no-repeat;
+}
+
+header { box-shadow: 0 2px 4px rgba(0,0,0,0.1); background-color:white}
+header#desktop { display: inline; grid-column: 1/-1; grid-row:1; z-index:2 }
+
+table th, table td
+{
+    margin:0;padding:0;border-collapse:collapse; border-spacing: 0;border:none;
+}
+
+table#ribbon
+{
+    width:100%; height:100%; line-height: 0;
+    border-collapse: collapse; border-spacing: 0;
+    padding:0;margin:0;
+}
+table#ribbon td { padding:0; margin:0; line-height: 0; }
+
+table#ribbon td, table#ribbon tr
+{
+    margin:0;padding:0;border-collapse:collapse; border-spacing: 0;
+}
+
+td#localcell { width: 200px;}
+td#himenucell { vertical-align:top;height:20px; }
+tr#bodyrow { height:40px; }
+tr#lomenurow { height:20px; }
+
+nav
+{
+    display:flex; justify-content: flex-end; align-items:flex-end;
+    font-size:1rem; padding:0; height:20px; width:100%; gap:.1rem;
+    background-color: black; line-height:initial;
+}
+nav.himenu { background-image:linear-gradient(60deg, white 10%,black 20%); justify-content: flex-end; align-items:flex-end; }
+nav.lomenu { background-image:linear-gradient(90deg, var(--dark), black);  justify-content: flex-start; align-items:flex-start;}
+
+div.separator
+{
+    display:inline-block; margin:0;padding:0; width:1px; height:50%; margin: auto 0; background-color: #ffffff7f;
+}
+
+a.himenuit, a.lomenuit
+{
+    display:inline-block; text-decoration:none; color:white;  font-size:small; padding:0rem .5rem;
+    background-color: transparent; box-shadow: none; padding-bottom: .1rem;
+    transition: padding-bottom 0.3s ease, padding-top 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+}
+a.himenuit:hover { background-color: black; color:white; padding-bottom:.5rem; box-shadow: 0 -5px 10px #0000007f; }
+a.himenuit:active { background-color: navy; color:white; padding-bottom:.3rem; }
+a.lomenuit:hover { background-color: var(--normal); color:white; padding-top:.5rem; box-shadow: 0 5px 10px #0000007f; }
+a.lomenuit:active { background-color: maroon; color:white; padding-top:.3rem; }
+
+a.lomenuit.sitemaplink {font-style:italic; color:#ffffff7f;}
+a.lomenuit.sitemaplink:hover { background-color: var(--bright); color:#ffffffff; padding-top:.5rem; box-shadow: 0 5px 10px #0000007f; }
+a.lomenuit.sitemaplink:active { background-color: maroon; color:#ffffffff; padding-top:.3rem; }
+
+span.lomenuit
+{
+    display:block; text-decoration:none; color:#ffffff7f; font-style: italic; font-size: small; padding:0rem 1rem;
+    background-color: transparent; box-shadow: none;
+    transition: padding-top 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+a#guide { display:block; float:right; margin:0; transition: padding-left 0.3s ease, margin-right 0.3s ease,box-shadow 0.3s ease;}
+a#guide:hover { padding-left: 2rem; margin-right: -2rem; box-shadow: 10px 0px 10px #0000007f;}
+a#guide:active { padding-left: 1rem; margin-right: -1rem; box-shadow: 10px 0px 10px #0000007f;}
+
+a#local { display:block; float:left; margin:0; transition: padding-top 0.3s ease, margin-bottom 0.3s ease,box-shadow 0.3s ease;}
+a#local:hover { padding-top: 1.25rem; margin-bottom: -1.25rem; box-shadow: 0 -5px 10px #0000007f;}
+a#local:active { padding-top: 1rem; margin-bottom: -1rem; box-shadow: 0 -5px 10px #0000007f;}
+
+main { padding: 0rem 1rem; text-align: justify; grid-column: 1; grid-row:2; margin-bottom:10rem;}
+main.container {max-width: 400px; text-align: center;}
+
+main p, main li { line-height:1.5rem; }
+main p { margin-bottom:1rem;}
+
+main h1
+{
+    font-size: 2rem; margin:0; font-weight: normal; color: black;
+    border-bottom: solid 1px #bfbfbf; padding-bottom: .5rem;
+}
+main h2, main h3, main h4, main h5, main h6 { margin:0; color: black; }
+
+main h1#title
+{
+    font-size: 3rem; margin:0; margin:1rem 0rem; font-weight: normal; color: var(--normal);
+    font-family: "Segoe UI Light", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; font-style: italic;
+    background-image: url("assets/wvleft.gif"); background-repeat: no-repeat; background-position: top right;
+    border-bottom: solid 1px #bfbfbf; padding-bottom: .5rem;
+}
+
+main a { color: var(--normal); text-decoration:none; cursor: pointer; }
+main a:hover { text-decoration:underline; color: var(--bright); }
+main a:active { text-decoration:underline; color: var(--dark); }
+
+
+label, p, input[type=text], input[type=password] { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size:1rem; margin:0}
+label, p { margin-top:1rem; }
+label, input {display:inline-block; margin-bottom: .5rem;}
+label { width: 100px; }
+
+footer
+{
+    background-color: var(--dark); height: 100%; grid-column: 1; grid-row:3;
+    background-image:linear-gradient(300deg, white 0%, var(--brighter) 50%, white 70%);
+    padding:0;
+}
+
+footer p
+{
+    color: #0000007f; font-size: .75rem; text-align: left; margin-top:.5rem; margin-left:1rem;padding:0;line-height: 1rem;
+}
+
+p.php_error
+{
+    color: red; font-size: 1.25rem; text-align: left; margin:.5rem;
+}
+
+input[type="submit"], input[type="button"], input[type="checkbox"], button { font-family: inherit; font-size: inherit; }
+
+input[type="checkbox"].button {display:none;}
+
+a.button, input[type="submit"], input[type="button"], button, input[type="checkbox"].button + label
+{
+    padding:.25rem 1rem; color: black; background-color: var(--bright);
+    border: 1px solid var(--dark); border-radius: .25rem;
+    background-image:radial-gradient(ellipse at top left, var(--brighter) 25%, var(--bright) 100%);
+    box-shadow: 2px 2px 5px #0000007f; cursor:pointer; filter: contrast(100%);
+}
+
+input[type="checkbox"].button + label {user-select: none;}
+
+a.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+button:hover,
+input[type="checkbox"].button + label:hover,
+input[type="checkbox"].button:checked + label:hover
+{ filter:brightness(110%); color:black; text-decoration: none; background-color: var(--brighter); }
+
+a.button:active,
+input[type="submit"]:active,
+input[type="button"]:active,
+button:active,
+input[type="checkbox"].button + label:active,
+input[type="checkbox"].button:checked + label:active
+{ filter:brightness(50%); color:black; background-color: var(--normal); box-shadow: inset 2px 2px 5px #0000007f;}
+
+a.button.disabled, input[type="submit"]:disabled, input[type="button"]:disabled, button:disabled
+{
+    box-shadow:none; filter: brightness(150%) contrast(25%); cursor: default;   
+}
+
+input[type="checkbox"].button:checked + label
+{
+    box-shadow: inset 1px 1px 2px #0000007f; filter:brightness(75%);
+}
+
+/* bar */
+
+aside.column { display:block; grid-row:2 / -1; margin:0; height:100%; width:100%; padding:0; margin-right:1rem; }
+aside.column#left { grid-column: 1; background-color: white;}
+aside.column#right { grid-column: 3; background-color:white;}
+
+aside.column h1
+{
+    font-size:1.5rem;margin:0;padding:.25rem; padding-top:1rem; background-color: #7f7fff; 
+    font-family: 'Segoe UI Semilight', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-style:italic;  font-weight: normal; 
+}
+aside.column#left h1
+{ color:white; text-shadow: 1px 1px 5px #000000ff; background-image:linear-gradient(300deg, white 10%, var(--bright) 20%); }
+aside.column#right h1
+{ color:var(--normal); background-image:linear-gradient(-350deg, white 70%, var(--brighter) 90%); }
+
+aside.column ul { list-style-type: none; margin:0; padding:0; }
+aside.column li { margin:0; padding:0; }
+
+aside.column .tocitem1
+{
+    display:block; font-size:1.25rem; border-bottom: solid 1px #bfbfbf;
+    padding:0.25rem 0.5rem; margin:0; text-decoration:none;
+}
+
+aside.column a.tocitem1,
+aside.column a.tocitem2,
+aside.column a.tocitem3,
+aside.column a.tocitem4,
+aside.column a.tocitem5,
+aside.column a.tocitem6
+{ color: var(--normal); cursor:pointer }
+
+aside.column a.tocitem1:hover,
+aside.column a.tocitem2:hover,
+aside.column a.tocitem3:hover,
+aside.column a.tocitem4:hover,
+aside.column a.tocitem5:hover,
+aside.column a.tocitem6:hover
+{ background-color: var(--normal); color:white; }
+
+aside.column a.tocitem1:active,
+aside.column a.tocitem2:active,
+aside.column a.tocitem3:active,
+aside.column a.tocitem4:active,
+aside.column a.tocitem5:active,
+aside.column a.tocitem6:active
+{ background-color: maroon; color:white; }
+
+aside.column .tocitem2, aside.column .tocitem3, aside.column .tocitem4, aside.column .tocitem5, aside.column .tocitem6
+{
+    display:block; font-size:1rem; font-weight:bold;
+    padding:0.25rem 0.5rem; margin:0; text-decoration:none;
+}
+aside.column .tocitem2 { padding-left: 1rem; }
+aside.column .tocitem3 { padding-left: 2rem; }
+aside.column .tocitem4 { padding-left: 3rem; }
+aside.column .tocitem5 { padding-left: 4rem; }
+aside.column .tocitem6 { padding-left: 5rem; }
+
+aside.column a.tocitemdisabled,
+aside.column a.tocitemdisabled:hover,
+aside.column a.tocitemdisabled:active
+{
+    color: var(--brighter); pointer-events: none;
+}
+
+main p.backtotop { text-align: right; margin:0; padding:0; display:block; }
+main p.backtotop a { font-size: .75rem; }
+
+a#local {text-decoration:none; color:black;}
+
+a#local div
+{
+    font-size:1.5rem; font-family: "Segoe UI Semibold",'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: white; padding:.75rem; margin:0;height: 60px; width:200px; line-height: 1.1rem;
+    box-sizing:border-box;
+}

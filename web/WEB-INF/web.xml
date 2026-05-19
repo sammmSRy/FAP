@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
-                             http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
-
+<web-app version="3.1" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee                               http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd">
     <context-param>
-        <param-name>headerTitle</param-name>
-        <param-value>My Secure Login Portal</param-value>
+        <param-name>GlobalHeader</param-name>
+        <param-value>ICS2609 2CSB SUGUI</param-value>
     </context-param>
     <context-param>
-        <param-name>footerInfo</param-name>
-        <param-value>© 2026 ICS2609 - Java Web App</param-value>
+        <param-name>EncryptionKey</param-name>
+        <param-value>MriONrSerTyNoIFtTfiOnYtREsRnoIRm</param-value>
     </context-param>
-
+    <listener>
+        <listener-class>com.project.Ears</listener-class>
+    </listener>
     <context-param>
-        <param-name>secretKey</param-name>
-        <param-value>MySecr3tK3y12345</param-value> </context-param>
+        <param-name>EncryptionKey</param-name>
+        <param-value>MySecr3tK3y12345</param-value>
+    </context-param>
     <context-param>
         <param-name>cipherAlgorithm</param-name>
         <param-value>AES</param-value>
@@ -25,35 +23,41 @@
         <param-name>captchaLength</param-name>
         <param-value>9</param-value>
     </context-param>
-
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>com.project.LoginServlet</servlet-class> 
+        <servlet-class>com.project.LoginServlet</servlet-class>
         <init-param>
-            <param-name>dbDriver</param-name>
+            <param-name>ClassPath</param-name>
             <param-value>org.apache.derby.jdbc.ClientDriver</param-value>
         </init-param>
         <init-param>
-            <param-name>dbURL</param-name>
-            <param-value>jdbc:derby://localhost:1527/LoginDB</param-value>
-        </init-param>
-        <init-param>
-            <param-name>dbUser</param-name>
+            <param-name>Username</param-name>
             <param-value>app</param-value>
         </init-param>
         <init-param>
-            <param-name>dbPass</param-name>
+            <param-name>Password</param-name>
             <param-value>app</param-value>
+        </init-param>
+        <init-param>
+            <param-name>HostName</param-name>
+            <param-value>localhost</param-value>
+        </init-param>
+        <init-param>
+            <param-name>Port</param-name>
+            <param-value>1527</param-value>
+        </init-param>
+        <init-param>
+            <param-name>Protocol</param-name>
+            <param-value>jdbc:derby</param-value>
         </init-param>
     </servlet>
-    <servlet-mapping>
-        <servlet-name>LoginServlet</servlet-name>
-        <url-pattern>/LoginServlet</url-pattern>
-    </servlet-mapping>
-
+    <servlet>
+        <servlet-name>ExitServlet</servlet-name>
+        <servlet-class>com.project.ExitServlet</servlet-class>
+    </servlet>
     <servlet>
         <servlet-name>AdminServlet</servlet-name>
-        <servlet-class>com.project.AdminServlet</servlet-class> 
+        <servlet-class>com.project.AdminServlet</servlet-class>
         <init-param>
             <param-name>dbDriver</param-name>
             <param-value>org.apache.derby.jdbc.ClientDriver</param-value>
@@ -75,7 +79,6 @@
         <servlet-name>AdminServlet</servlet-name>
         <url-pattern>/AdminServlet</url-pattern>
     </servlet-mapping>
-
     <servlet>
         <servlet-name>CaptchaServlet</servlet-name>
         <servlet-class>com.project.CaptchaServlet</servlet-class>
@@ -84,7 +87,6 @@
         <servlet-name>CaptchaServlet</servlet-name>
         <url-pattern>/CaptchaServlet</url-pattern>
     </servlet-mapping>
-
     <servlet>
         <servlet-name>ReportServlet</servlet-name>
         <servlet-class>com.project.ReportServlet</servlet-class>
@@ -109,13 +111,58 @@
         <servlet-name>ReportServlet</servlet-name>
         <url-pattern>/ReportServlet</url-pattern>
     </servlet-mapping>
-
+    <servlet-mapping>
+        <servlet-name>ExitServlet</servlet-name>
+        <url-pattern>/exit</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>LoginServlet</servlet-name>
+        <url-pattern>/auth</url-pattern>
+    </servlet-mapping>
+        <error-page>
+        <error-code>400</error-code>
+        <location>/err/400.htm</location>
+    </error-page>
+    <error-page>
+        <error-code>403</error-code>
+        <location>/err/403.htm</location>
+    </error-page>
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error_4.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.sql.SQLException</exception-type>
+        <location>/err/sql.htm</location>
+    </error-page>
+    <error-page>
+        <exception-type>javax.security.sasl.AuthenticationException</exception-type>
+        <location>/error_3.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>com.project.warden.InvalidEntryException</exception-type>
+        <location>/err/auth_pxs.htm</location>
+    </error-page>
+    <error-page>
+        <exception-type>com.project.warden.NullAuthenticationException</exception-type>
+        <location>/noLoginCredentials.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>com.project.warden.UsernameNotFoundException</exception-type>
+        <location>/error_1.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>com.project.warden.IncorrectPasswordException</exception-type>
+        <location>/error_2.jsp</location>
+    </error-page>
+    <error-page>
+        <exception-type>com.project.warden.UsernameFoundException</exception-type>
+        <location>/err/pxu.htm</location>
+    </error-page>
     <session-config>
         <session-timeout>5</session-timeout>
     </session-config>
-
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
-
 </web-app>

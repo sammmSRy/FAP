@@ -13,7 +13,7 @@
     <div class="container" style="text-align: center;">
         <div class="alert-box" style="border-left-color: orange; background-color: #fff3e0; text-align: left;">
             <h3 style="color: #e67e22;">Authentication Error (Code: 2)</h3>
-            <p>We found your username, but the password you entered is incorrect. Please try again.</p>
+            <p>The password you entered is incorrect. Please try again.</p>
         </div>
         <br>
         <a href="index.jsp"><button>Back to Login Page</button></a>

@@ -13,7 +13,7 @@
     <div class="container" style="text-align: center;">
         <div class="alert-box" style="text-align: left;">
             <h3>Invalid Credentials (Code: 3)</h3>
-            <p>The username and password provided do not match any record in our system.</p>
+            <p>Invalid username or password.</p>
         </div>
         <br>
         <a href="index.jsp"><button>Try Again</button></a>
