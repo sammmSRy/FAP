@@ -117,7 +117,7 @@ public class AssignmentReportServlet extends HttpServlet {
             conn.close();
 
             // Pagination: 20 rows per page
-            int rowsPerPage = 20;
+            int rowsPerPage = 40;
             int totalRows = rows.size();
             int totalPages = (int) Math.ceil((double) totalRows / rowsPerPage);
             int pageNum = 0;
@@ -159,14 +159,14 @@ public class AssignmentReportServlet extends HttpServlet {
         PdfPCell cell = new PdfPCell(new Phrase(text, new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD)));
         cell.setBackgroundColor(BaseColor.LIGHT_GRAY);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setPadding(5);
+        cell.setPadding(8f);
         return cell;
     }
 
     private PdfPCell createDataCell(String text) {
         PdfPCell cell = new PdfPCell(new Phrase(text, new Font(Font.FontFamily.HELVETICA, 10)));
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setPadding(5);
+        cell.setPadding(8f);
         return cell;
     }
 
