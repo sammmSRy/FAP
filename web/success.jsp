@@ -18,6 +18,7 @@
 <html>
 <head>
     <title>Success Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
@@ -31,8 +32,19 @@
 
         <% if (role.equals("admin")) { %>
             <h3>Admin Panel: All Records</h3>
-            <form action="ReportServlet" method="GET" target="_blank" style="margin-bottom: 10px;">
-            <button type="submit" style="background-color: #27ae60;">Generate Admin Report (PDF)</button>
+
+            <!-- NEW: Report generation with type and date filter -->
+            <form action="ReportServlet" method="GET" target="_blank" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; background: #f9f9f9;">
+            <label>Report Type:</label>
+            <select name="type">
+                <option value="all">All Users</option>
+                <option value="own">My Own Record</option>
+            </select><br>
+            <label>From Date (optional):</label>
+            <input type="date" name="fromDate"><br>
+            <label>To Date (optional):</label>
+            <input type="date" name="toDate"><br>
+            <input type="submit" value="Download PDF" style="background-color: #27ae60;">
             </form>
             <table>
                 <tr>
@@ -85,7 +97,7 @@
 
             <hr>
             
-            <h3>Add New User</h3>
+            <h3>Add New User (Derby)</h3>
             <div style="max-width: 400px;">
                 <form action="AdminServlet" method="POST">
                     <input type="hidden" name="action" value="insert">
@@ -104,6 +116,147 @@
                     
                     <input type="submit" value="Create User">
                 </form>
+                
+            <hr>
+            <h3>Course Management (MySQL)</h3>
+
+            <!-- Add Course Form -->
+                <form action="CourseServlet" method="POST" style="margin-bottom: 15px;">
+                    <input type="hidden" name="action" value="add">
+                    
+                    <label>Course Name:</label>
+                    <input type="text" name="courseName" required>
+                    
+                    <label>Instructor:</label>
+                    <input type="text" name="instructor" required>
+                    
+                    <label>Schedule:</label>
+                    <input type="text" name="schedule" required>
+                    <br><br>
+                    <input type="submit" value="Add Course">
+                </form>
+
+            <!-- Course Report Button -->
+                <form action="CourseReportServlet" method="GET" target="_blank" style="margin-bottom: 20px;">
+                    <label>From Date (optional):</label>
+                    <input type="date" name="fromDate">
+                    
+                    <label>To Date (optional):</label>
+                    <input type="date" name="toDate">
+                    <input type="submit" value="Download Course Report (PDF)" style="background-color: #27ae60;">
+                </form>
+            
+            <hr>
+            <h3>All Courses (MySQL)</h3>
+            <table border="1">
+                <tr>
+                    <th>ID</th>
+                    <th>Course Name</th>
+                    <th>Instructor</th>
+                    <th>Schedule</th>
+                    <th>Created Date</th>
+                    <th>Action</th>
+                </tr>
+                <%
+                    try {
+                        // Get MySQL connection using context params (same as CourseServlet)
+                        String mysqlDriver = application.getInitParameter("mysqlDriver");
+                        String mysqlURL = application.getInitParameter("mysqlURL");
+                        String mysqlUser = application.getInitParameter("mysqlUser");
+                        String mysqlPass = application.getInitParameter("mysqlPass");
+
+                        Class.forName(mysqlDriver);
+                        Connection conn = DriverManager.getConnection(mysqlURL, mysqlUser, mysqlPass);
+                        Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery("SELECT * FROM courses ORDER BY created_date DESC");
+
+                        while (rs.next()) {
+                            int id = rs.getInt("id");
+                %>
+                <tr>
+                    <td><%= id%></td>
+                    <td><%= rs.getString("course_name")%></td>
+                    <td><%= rs.getString("instructor")%></td>
+                    <td><%= rs.getString("schedule")%></td>
+                    <td><%= rs.getDate("created_date")%></td>
+                    <td>
+                        <!-- Delete form -->
+                        <form action="CourseServlet" method="POST" style="display:inline;">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="id" value="<%= id%>">
+                            <input type="submit" value="Delete" class="btn-delete"
+                                   onclick="return confirm('Delete this course?');">
+                        </form>
+                    </td>
+                </tr>
+                <%
+                        }
+                        conn.close();
+                    } catch (Exception e) {
+                        out.println("<tr><td colspan='6'>Error loading courses: " + e.getMessage() + "</td></tr>");
+                    }
+                %>
+            </table>
+            
+            <hr>
+<h3>Assignment Management (PostgreSQL)</h3>
+<form action="AssignmentServlet" method="POST" style="margin-bottom: 15px;">
+    <input type="hidden" name="action" value="add">
+    <label>Title:</label>
+    <input type="text" name="title" required>
+    <label>Course ID:</label>
+    <input type="number" name="courseId" required>
+    <label>Due Date:</label>
+    <input type="date" name="dueDate" required>
+    <input type="submit" value="Add Assignment">
+</form>
+
+<table border="1">
+    <tr><th>ID</th><th>Title</th><th>Course ID</th><th>Due Date</th><th>Action</th></tr>
+    <%
+        try {
+            // PostgreSQL connection
+            String pgDriver = application.getInitParameter("postgresDriver");
+            String pgURL = application.getInitParameter("postgresURL");
+            String pgUser = application.getInitParameter("postgresUser");
+            String pgPass = application.getInitParameter("postgresPass");
+
+            Class.forName(pgDriver);
+            Connection pgConn = DriverManager.getConnection(pgURL, pgUser, pgPass);
+            Statement pgStmt = pgConn.createStatement();
+            ResultSet pgRs = pgStmt.executeQuery("SELECT * FROM assignments ORDER BY due_date");
+            while (pgRs.next()) {
+    %>
+    <tr>
+        <td><%= pgRs.getInt("id") %></td>
+        <td><%= pgRs.getString("title") %></td>
+        <td><%= pgRs.getInt("course_id") %></td>
+        <td><%= pgRs.getDate("due_date") %></td>
+        <td>
+            <form action="AssignmentServlet" method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="<%= pgRs.getInt("id") %>">
+                <input type="submit" value="Delete" class="btn-delete"
+                       onclick="return confirm('Delete this assignment?');">
+            </form>
+        </td>
+    </tr>
+    <%
+            }
+            pgConn.close();
+        } catch (Exception e) {
+            out.println("<tr><td colspan='5'>Error: " + e.getMessage() + "</td></tr>");
+        }
+    %>
+</table>
+<!-- Assignment Report Button -->
+<form action="AssignmentReportServlet" method="GET" target="_blank" style="margin-top: 10px; margin-bottom: 20px;">
+    <label>From Date (optional):</label>
+    <input type="date" name="fromDate">
+    <label>To Date (optional):</label>
+    <input type="date" name="toDate">
+    <input type="submit" value="Download Assignment Report (PDF)" style="background-color: #27ae60;">
+</form>
             </div>
         <% } else { %>
             <h3>Guest Panel</h3>

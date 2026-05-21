@@ -18,6 +18,7 @@
 <html>
 <head>
     <title>Edit User</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="style.css">
     <style>
         body { font-family: sans-serif; padding: 20px; }

@@ -26,6 +26,42 @@
         <param-value>9</param-value>
     </context-param>
 
+    <!-- MySQL Context Parameters (for Course Table) -->
+    <context-param>
+        <param-name>mysqlDriver</param-name>
+        <param-value>com.mysql.cj.jdbc.Driver</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mysqlURL</param-name>
+        <param-value>jdbc:mysql://127.0.0.1:3310/course_db?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</param-value>
+    </context-param>
+    <context-param>
+        <param-name>mysqlUser</param-name>
+        <param-value>app</param-value>      <!-- your MySQL username -->
+    </context-param>
+    <context-param> 
+        <param-name>mysqlPass</param-name>
+        <param-value>app123</param-value>   <!-- your MySQL password -->    
+    </context-param>
+
+    <!-- PostgreSQL Context Parameters (for Assignments or another table) -->
+    <context-param>
+        <param-name>postgresDriver</param-name>
+        <param-value>org.postgresql.Driver</param-value>
+    </context-param>
+    <context-param>
+        <param-name>postgresURL</param-name>
+        <param-value>jdbc:postgresql://localhost:5432/course_db</param-value>
+    </context-param>
+    <context-param>
+        <param-name>postgresUser</param-name>
+        <param-value>postgres</param-value>      <!-- your PostgreSQL username -->
+    </context-param>
+    <context-param>
+        <param-name>postgresPass</param-name>
+        <param-value>postgres</param-value>   <!-- your PostgreSQL password -->
+    </context-param>
+
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>com.project.LoginServlet</servlet-class> 
@@ -110,6 +146,43 @@
         <url-pattern>/ReportServlet</url-pattern>
     </servlet-mapping>
 
+    <!-- Servlet for Course CRUD (MySQL) -->
+    <servlet>
+        <servlet-name>CourseServlet</servlet-name>
+        <servlet-class>com.project.CourseServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CourseServlet</servlet-name>
+        <url-pattern>/CourseServlet</url-pattern>
+    </servlet-mapping>
+
+    <!-- Servlet for Course PDF Report (MySQL) -->
+    <servlet>
+        <servlet-name>CourseReportServlet</servlet-name>
+        <servlet-class>com.project.CourseReportServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CourseReportServlet</servlet-name>
+        <url-pattern>/CourseReportServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AssignmentServlet</servlet-name>
+        <servlet-class>com.project.AssignmentServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AssignmentServlet</servlet-name>
+        <url-pattern>/AssignmentServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>AssignmentReportServlet</servlet-name>
+        <servlet-class>com.project.AssignmentReportServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>AssignmentReportServlet</servlet-name>
+        <url-pattern>/AssignmentReportServlet</url-pattern>
+    </servlet-mapping>
     <session-config>
         <session-timeout>5</session-timeout>
     </session-config>
