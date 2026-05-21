@@ -7,8 +7,8 @@
 <!-- the Compile on Save feature is turned off for the project. -->
 <!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
 <!-- in the project's Project Properties dialog box.-->
-<project name="ICS2609_2CSB_SUNGA_ATILARES" default="default" basedir=".">
-    <description>Builds, tests, and runs the project ICS2609_2CSB_SUNGA_ATILARES.</description>
+<project name="ICS2609_2CSB_SUNGA_SUGUI" default="default" basedir=".">
+    <description>Builds, tests, and runs the project ICS2609_2CSB_SUNGA_SUGUI.</description>
     <import file="nbproject/build-impl.xml"/>
     <!--
 

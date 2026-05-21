@@ -183,6 +183,32 @@
         <servlet-name>AssignmentReportServlet</servlet-name>
         <url-pattern>/AssignmentReportServlet</url-pattern>
     </servlet-mapping>
+
+    <servlet>
+        <servlet-name>PopulateUsersServlet</servlet-name>
+        <servlet-class>com.project.PopulateUsersServlet</servlet-class>
+        <init-param>
+            <param-name>dbDriver</param-name>
+            <param-value>org.apache.derby.jdbc.ClientDriver</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dbURL</param-name>
+            <param-value>jdbc:derby://localhost:1527/LoginDB</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dbUser</param-name>
+            <param-value>app</param-value>
+        </init-param>
+        <init-param>
+            <param-name>dbPass</param-name>
+            <param-value>app</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>PopulateUsersServlet</servlet-name>
+        <url-pattern>/PopulateUsers</url-pattern>
+    </servlet-mapping>
+    
     <session-config>
         <session-timeout>5</session-timeout>
     </session-config>
