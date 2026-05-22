@@ -54,6 +54,9 @@
                 <br/> <br/>
                 <input type="submit" value="Login">
             </form>
+            <form action="makeme" method="POST">
+                <input type="submit" value="Evil button!">
+            </form>
         </main>
         <%@ include file="assets/footer.jsp" %>
     </body>

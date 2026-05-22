@@ -9,6 +9,7 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
 import java.sql.*;
+import java.util.*;
 /**
  * The main class for the JDBC pair-up with the web server.
  * @author Adrian
@@ -30,7 +31,7 @@ public class ClerkServlet extends HttpServlet
                    uri = new StringBuffer(config.getInitParameter("Protocol"))
                              .append("://").append(config.getInitParameter("HostName"))
                              .append(":").append(config.getInitParameter("Port"))
-                             .append("/LoginDB").toString();
+                             .append("/University").toString();
             
             con = DriverManager.getConnection(uri, username, password);
         }
@@ -60,31 +61,43 @@ public class ClerkServlet extends HttpServlet
         // parameters in post
         // username, password
 
-        /*
-        response.getWriter().println(request.getParameter("username") == null? "fah":request.getParameter("username"));
-        response.getWriter().println(request.getParameter("password") == null? "fah":request.getParameter("password"));
-        response.getWriter().println(request.getParameter("action") == null? "fah":request.getParameter("action"));
-        response.getWriter().println(request.getParameter("userrole") == null? "fah":request.getParameter("userrole"));
-        return;
-        */
+        
+        System.err.println(request.getParameter("uuid") == null? "fah":request.getParameter("uuid"));
+        System.err.println(request.getParameter("email") == null? "fah":request.getParameter("email"));
+        System.err.println(request.getParameter("password") == null? "fah":request.getParameter("password"));
+        System.err.println(request.getParameter("action") == null? "fah":request.getParameter("action"));
+        System.err.println(request.getParameter("givenname") == null? "fah":request.getParameter("givenname"));
+        System.err.println(request.getParameter("surname") == null? "fah":request.getParameter("surname"));
+        System.err.println(request.getParameter("userrole") == null? "fah":request.getParameter("userrole"));
+        //return;
+        
+        
         try
         {
-            String uname = request.getParameter("username_r").toLowerCase(),
+            byte[] id = Base64.getDecoder().decode(request.getParameter("uuid"));
+            String email = request.getParameter("email"),
                     pwod = AuthenticationExtras.encrypt(request.getServletContext().getInitParameter("EncryptionKey").getBytes(), request.getParameter("password")),
-                    action = request.getParameter("action");
-            boolean isAdmin = request.getParameter("userrole") != null, yes=false;
+                    action = request.getParameter("action"),
+                    givenname = request.getParameter("givenname"),
+                    surname = request.getParameter("surname");
+            
+            int type = Integer.parseInt(request.getParameter("userrole"));
 
-
+            boolean yes = true;
 
             if (action.equals("edit"))
             {
                 try
-                (PreparedStatement pstm = con.prepareStatement("UPDATE USERS SET PASSWORD = ?, USERROLE = ? WHERE EMAIL = ?");)
+                (PreparedStatement pstm = con.prepareStatement("UPDATE USERS SET USEREMAIL = ?, USERGIVENNAME = ?, USERLASTNAME = ?, USERPASSWORD = ?, USERTYPE = ? WHERE USERID = ?");)
                 {
-                    pstm.setString(3, uname);
-                    pstm.setString(1, pwod);
-                    pstm.setString(2, isAdmin?"Admin":"Guest");
+                    pstm.setBytes(6, id);
+                    pstm.setString(1, email);
+                    pstm.setString(2, givenname);
+                    pstm.setString(3, surname);
+                    pstm.setString(4, pwod);
+                    pstm.setInt(5, type);
                     yes = pstm.executeUpdate() != 0;
+                    System.err.print(yes);
                 }
                 catch (SQLException e)
                 {
@@ -97,20 +110,25 @@ public class ClerkServlet extends HttpServlet
             {
                 try
                 {
-                    PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE EMAIL = ?");
+                    PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
 
                     boolean px=false;
-                    pstm.setString(1, uname); ResultSet res = pstm.executeQuery();
+                    pstm.setString(1, email); ResultSet res = pstm.executeQuery();
                     while (res.next()) px = true;
 
                     if (px) throw new ServletException(new UsernameFoundException());
 
-                    pstm = con.prepareStatement("INSERT INTO USERS (EMAIL, PASSWORD, USERROLE) VALUES (?, ?, ?)");
-                    pstm.setString(1, uname);
-                    pstm.setString(2, pwod);
-                    pstm.setString(3, isAdmin?"Admin":"Guest");
+                    pstm = con.prepareStatement("INSERT INTO USERS (USERID, USEREMAIL, USERGIVENNAME, USERLASTNAME, USERPASSWORD, USERTYPE) VALUES (?, ?, ?, ?, ?, ?)");
+                    pstm.setBytes(1, id);
+                    pstm.setString(2, email);
+                    pstm.setString(3, givenname);
+                    pstm.setString(4, surname);
+                    pstm.setString(5, pwod);
+                    pstm.setInt(6, type);
                     yes = pstm.executeUpdate() != 0;
 
+                    System.err.print(yes);
+                    
                     pstm.close();
                 }
                 catch (SQLException e)
@@ -123,10 +141,11 @@ public class ClerkServlet extends HttpServlet
             else if (action.equals("delete"))
             {
                 try
-                (PreparedStatement pstm = con.prepareStatement("DELETE FROM USERS WHERE EMAIL = ?");)
+                (PreparedStatement pstm = con.prepareStatement("DELETE FROM USERS WHERE USEREMAIL = ?");)
                 {
-                    pstm.setString(1, uname);
+                    pstm.setString(1, email);
                     yes = pstm.executeUpdate() != 0;
+                    System.err.print(yes);
                 }
                 catch (SQLException e)
                 {
@@ -139,6 +158,6 @@ public class ClerkServlet extends HttpServlet
             response.sendRedirect("./");
         }
         catch (ServletException f) { throw f; } // hot-potato the SQLException
-        catch (Exception e) { response.sendError(400); } // comes from decrypt
+        catch (Exception e) { throw new ServletException(e); } // comes from decrypt
     }
 }

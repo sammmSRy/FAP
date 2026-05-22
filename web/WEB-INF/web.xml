@@ -87,6 +87,38 @@
         <servlet-name>report</servlet-name>
         <servlet-class>test.ReporterServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>captchagen</servlet-name>
+        <servlet-class>test.CaptchaGenServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>DEBUG_auth</servlet-name>
+        <servlet-class>test.__authdebug</servlet-class>
+        <init-param>
+            <param-name>ClassPath</param-name>
+            <param-value>org.apache.derby.jdbc.ClientDriver</param-value>
+        </init-param>
+        <init-param>
+            <param-name>Username</param-name>
+            <param-value>app</param-value>
+        </init-param>
+        <init-param>
+            <param-name>Password</param-name>
+            <param-value>app</param-value>
+        </init-param>
+        <init-param>
+            <param-name>HostName</param-name>
+            <param-value>localhost</param-value>
+        </init-param>
+        <init-param>
+            <param-name>Port</param-name>
+            <param-value>1527</param-value>
+        </init-param>
+        <init-param>
+            <param-name>Protocol</param-name>
+            <param-value>jdbc:derby</param-value>
+        </init-param>
+    </servlet>
     <servlet-mapping>
         <servlet-name>auth</servlet-name>
         <url-pattern>/auth</url-pattern>
@@ -106,6 +138,14 @@
     <servlet-mapping>
         <servlet-name>report</servlet-name>
         <url-pattern>/report</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>captchagen</servlet-name>
+        <url-pattern>/captcha/gen</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DEBUG_auth</servlet-name>
+        <url-pattern>/makeme</url-pattern>
     </servlet-mapping>
     <session-config>
         <session-timeout>5</session-timeout>

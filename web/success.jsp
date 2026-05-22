@@ -28,10 +28,19 @@
     
     Connection con = DriverManager.getConnection(uri, username, password); System.out.print("Connection opened");
     
-    PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE EMAIL = ?");
+    PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
-    String currUser = res.getString("EMAIL");
-    boolean adm = res.getString("USERROLE").toUpperCase().contains("ADMIN");
+    String currUser = res.getString("USEREMAIL");
+    
+    String appelation = "Student";
+    switch (res.getInt("USERTYPE"))
+    {
+        case 2: appelation="Administrator"; break;
+        case 1: appelation="Teacher"; break;
+        case 0: default: break;
+    }
+    
+    boolean adm = appelation.equals("Administrator");
     pstm.close();
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -94,29 +103,24 @@
                     <tr>
                         <th></th>
                         <th>Email address</th>
-                        <th>Password</th>
-                        <th>User role</th>
+                        <th>Name</th>
+                        <th>User type</th>
                     </tr>
                     <%
-                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS ORDER BY EMAIL ASC");
+                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS ORDER BY USERLASTNAME ASC");
                         while (rs.next())
                         {
                     %>
-                        <tr onclick="pickMe('<%= rs.getString("EMAIL") %>')">
-                            <td><input type="radio" name="email" value="<%= rs.getString("EMAIL") %>"></td>
-                            <td><%= rs.getString("EMAIL") %></td>
-                            <td>
-                                <span class="realpass" style="display:none"><%= rs.getString("PASSWORD") %></span>
-                                <span class="hashpass" style="display:inline"><%= new String(new char[rs.getString("PASSWORD").length()]).replace("\0","*")%></span>
-                            </td>
-                            <td><%= rs.getString("USERROLE") %></td>
+                        <tr onclick="pickMe('<%= rs.getString("USEREMAIL") %>')">
+                            <td><input type="radio" name="email" value="<%= rs.getString("USEREMAIL") %>"></td>
+                            <td><%= rs.getString("USEREMAIL") %></td>
+                            <td><%= rs.getString("USERLASTNAME").toUpperCase() %>, <%= rs.getString("USERGIVENNAME") %></td>
+                            <td><%= rs.getInt("USERTYPE") == 2? "Administrator":rs.getInt("USERTYPE") == 1?"Teacher":"Student" %></td>
                         </tr>
                     <%
                         }
                     %>
                 </table>
-                <input type="checkbox" name="showps" id="showps" class="button" onclick="notifypass()">
-                <label for="showps" style="width:max-content">Show/hide passwords</label>
                 <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
 
@@ -130,7 +134,7 @@
             <h1>User account information</h1>
             <ul>
                 <li><p class="tocitem1"><%= currUser %></p></li>
-                <li><p class="tocitem2"><%= adm? "ADMINISTRATOR":"GUEST" %></p></li>
+                <li><p class="tocitem2"><%= appelation %></p></li>
             </ul>
         </aside>
         <%@ include file="assets/footer.jsp" %>
@@ -149,22 +153,6 @@
                 {
                     document.getElementById("eduser").classList.add("tocitemdisabled");
                     document.getElementById("deluser").classList.add("tocitemdisabled");                    
-                }
-            }
-            
-            function notifypass()
-            {
-                var el1 = document.getElementsByClassName("realpass"),
-                    el2 = document.getElementsByClassName("hashpass");
-                if(document.getElementById("showps").checked)
-                {
-                    for (var i = 0; i < el1.length; i++)
-                    { el1[i].style = "display:inline"; el2[i].style = "display:none"; }
-                }
-                else
-                {
-                    for (var i = 0; i < el1.length; i++)
-                    { el1[i].style = "display:none"; el2[i].style = "display:inline"; }
                 }
             }
 

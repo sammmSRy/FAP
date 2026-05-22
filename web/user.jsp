@@ -26,15 +26,27 @@
     
     Connection con = DriverManager.getConnection(uri, username, password);
     
-    PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE EMAIL = ?");
+    PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
-    boolean adm = res.getString("USERROLE").toUpperCase().contains("ADMIN");
-    String currUser = res.getString("EMAIL");
-    String uname = "", pwod = ""; boolean admn = false;
+    
+    String currUser = res.getString("USEREMAIL");
+    String appelation = "Student";
+    switch (res.getInt("USERTYPE"))
+    {
+        case 2: appelation="Administrator"; break;
+        case 1: appelation="Teacher"; break;
+        case 0: default: break;
+    }
+    
+    boolean adm = appelation.equals("Administrator");
+    pstm.close();
+    
+    if (!adm) response.sendError(403);
+    String mail = "", fname = "", lname = "", pwod = ""; int type = 0; String uuid = "";
     
     if (request.getParameter("action").equals("edit"))
     {
-        pstm = con.prepareStatement("SELECT * FROM USERS WHERE EMAIL = ?");
+        pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
         pstm.setString(1, request.getParameter("email"));
         res = pstm.executeQuery();
         boolean yes = false;
@@ -42,18 +54,19 @@
         while (res.next())
         {
             yes = true;
-            uname = res.getString("EMAIL");
-            pwod = test.AuthenticationExtras.decrypt(getServletContext().getInitParameter("EncryptionKey").getBytes(), res.getString("PASSWORD"));
-            admn = res.getString("USERROLE").toUpperCase().contains("ADMIN");
+            uuid = Base64.getEncoder().encodeToString(res.getBytes("USERID"));
+            mail = res.getString("USEREMAIL");
+            fname = res.getString("USERGIVENNAME");
+            lname = res.getString("USERLASTNAME");
+            pwod = test.AuthenticationExtras.decrypt(getServletContext().getInitParameter("EncryptionKey").getBytes(), res.getString("USERPASSWORD"));
+            type = res.getInt("USERTYPE");
         }
         
         if (!yes) throw new ServletException(new UsernameNotFoundException());
     }
-    pstm.close();
+    else uuid = Base64.getEncoder().encodeToString(ClerkExtras.uuidEncoding(UUID.randomUUID()));
     
-    System.out.println(currUser + " " + uname + ": " + currUser.equals(uname));
-    
-    if (!adm) response.sendError(403);
+System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -61,7 +74,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>User account information page &ndash; <%= uname.length() == 0? "(new)":uname %> &mdash; MP2</title>
+        <title>User account information page &ndash; <%= mail.length() == 0? "(new)":ClerkExtras.abbr(fname) + " " + lname %> &mdash; MP2</title>
         <link rel="stylesheet" href="main.css"/>
         <style>
             body { grid-template-columns:20% 1fr 20%;}
@@ -98,40 +111,45 @@
         <main>
             <h1 id="title">User account information page</h1>
             <form action="clerk" method="POST" id="formy">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" value="<%= uname %>" <%= !request.getParameter("action").equals("new")? "disabled":"" %> required/>
-                <input type="hidden" id="username_r" name="username_r" value="<%= uname %>"/>
+                <input type="hidden" name="uuid" value="<%= uuid %>"/>
+                <label for="username">Email address:</label>
+                <input type="text" id="username" name="email" value="<%= mail %>" required/>
                 <br/>
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" value="<%= pwod %>"/>
                 <br/>
-                <label for="userrole">Is admin:</label>
-                <input type="checkbox" id="userrole" name="userrole" value="admin" <%= admn? "checked":"" %>/>
+                <label for="givenname">Given name:</label>
+                <input type="text" id="givenname" name="givenname" value="<%= fname %>"/>
+                <br/>
+                <label for="surname">Last name:</label>
+                <input type="text" id="surname" name="surname" value="<%= lname %>" required/>
+                <br/>
+                <label for="userrole">User type:</label>
+                <input type="range" id="userrole" name="userrole" value="<%= type %>" min="0" max="2" required/>
+                <p>0 = student; 1 = teacher; 2 = administrator;</p>
                 <br/> <br/>
                 <input type="hidden" id="action" name="action" value="<%= request.getParameter("action") %>"/>
                 <input type="submit" id="submitbtn" value="Update">
                 &nbsp;
                 <input type="button" value="Cancel" onclick="window.history.back();"/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <input type="button" value="Delete" onclick="delUser();" <%= currUser.equals(uname)? "disabled":"" %> <%= request.getParameter("action").equals("new")? "disabled":"" %>/>
+                <input type="button" value="Delete" onclick="delUser();" <%= currUser.equals(mail)? "disabled":"" %> <%= request.getParameter("action").equals("new")? "disabled":"" %>/>
             </form>
         </main>
         <aside class="column" id="right"> </aside>
         <%@ include file="assets/footer.jsp" %>
         <script>
-            var initAdmin = document.getElementById("userrole").checked;
+            var initAdmin = document.getElementById("userrole").value;
             
             document.getElementById("formy").addEventListener("submit", postEvents);
             
             function postEvents(event)
             {
-                document.getElementById("username_r").value = document.getElementById("username").value;
-                
-                let currAdmin = document.getElementById("userrole").checked;
+                let currAdmin = document.getElementById("userrole").value;
                 if (initAdmin != currAdmin
-                        && !confirm(initAdmin?
-                "This user will lose administrator privileges if you continue."
-                :"This user will gain administrator privileges if you continue."))
+                        && !confirm(initAdmin>currAdmin?
+                "This user will lose some privileges if you continue."
+                :"This user will gain some privileges if you continue."))
                     event.preventDefault();
             }
             
@@ -139,7 +157,7 @@
             {
                 if
                 (confirm("Are you sure you want to delete '"
-                        + document.getElementById("username").value + "'?"
+                        + document.getElementById("givenname").value + " " + document.getElementById("surname").value + "'?"
                         + "\nThis user will be lost forever! (A long time!)"))
                 {        
                     let form = document.getElementById("formy");

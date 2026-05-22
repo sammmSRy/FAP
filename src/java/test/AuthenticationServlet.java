@@ -36,7 +36,7 @@ public class AuthenticationServlet extends HttpServlet {
                    uri = new StringBuffer(config.getInitParameter("Protocol"))
                              .append("://").append(config.getInitParameter("HostName"))
                              .append(":").append(config.getInitParameter("Port"))
-                             .append("/LoginDB").toString();
+                             .append("/University").toString();
             
             dbUsername = username; dbPassword = password; dbUri = uri;
             dbClassPath = config.getInitParameter("ClassPath");
@@ -70,10 +70,10 @@ public class AuthenticationServlet extends HttpServlet {
 
             if (uname.length() == 0 && pwod.length() == 0) throw new NullAuthenticationException();
 
-            try (PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE EMAIL = ?");)
+            try (PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");)
             {
                 pstm.setString(1, uname); ResultSet res = pstm.executeQuery();
-                while (res.next()) if (res.getString("PASSWORD").equals(pwod)) yes = true;
+                while (res.next()) if (res.getString("USERPASSWORD").equals(pwod)) yes = true;
                 else throw new IncorrectPasswordException();
             }
             catch (SQLException e)

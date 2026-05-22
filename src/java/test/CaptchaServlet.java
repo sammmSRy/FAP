@@ -36,6 +36,7 @@ public class CaptchaServlet extends HttpServlet
         }
         
         cc = generateCaptcha(len);
+        CaptchaGenServlet.capc = cc;
         
         // we're doin it live!!
         out.println("<html>");
@@ -44,7 +45,7 @@ public class CaptchaServlet extends HttpServlet
         out.println("<link rel=\"stylesheet\" href=\"main.css\"/>");
         out.println("</head>");
         out.println("<body style=\"padding:1rem\"><main>");
-        out.println("<p style=\"font-weight:bold;font-size:24pt\">"+cc+"</p>");
+        out.println("<img src=\"captcha/gen\" style=\"border: 1px solid #ccc; border-radius: 4px;\">");
         out.println("<p><em>Enter the string of characters as shown above.</em></p>");
         out.println("<form action=\"captcha\" method=\"POST\" style=\"margin:0\">");
         out.println("<label for=\"captchatest\">Answer:</label>");
