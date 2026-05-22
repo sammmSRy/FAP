@@ -60,8 +60,6 @@ public class ReporterServlet extends HttpServlet
     
     protected @Override void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
-
-        
         LocalDateTime nn = LocalDateTime.now(); admin = Boolean.parseBoolean(request.getParameter("admin"));
         
         response.setContentType("application/pdf");

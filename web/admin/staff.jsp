@@ -31,17 +31,19 @@
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     String currUser = res.getString("USEREMAIL");
-    
+    int type = res.getInt("USERTYPE");
     String appelation = "Student";
-    switch (res.getInt("USERTYPE"))
+    switch (type)
     {
         case 2: appelation="Administrator"; break;
         case 1: appelation="Teacher"; break;
         case 0: default: break;
     }
     
-    boolean adm = appelation.equals("Administrator");
+    boolean adm = type == 2;
     pstm.close();
+    
+    if (!adm) { response.sendError(403); return; }
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -50,7 +52,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Dashboard &mdash; MP2</title>
-        <link rel="stylesheet" href="main.css"/>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/main.css"/>
         <style>
             body { grid-template-columns:20% 1fr 20%;}
             main, footer { grid-column: 2; }
@@ -81,11 +83,44 @@
         </style>
     </head>
     <body>
-        <%@ include file="assets/header.jsp" %>
+        <%@ include file="/assets/header.jsp" %>
+        <aside class="column" id="left">
+            <h1>Server tasks</h1>
+            <ul>
+                 <li><a class="tocitem2" id="mkuser" href="user.jsp?action=new">Create new user...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit user...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete user!</a></li>
+            </ul>
+        </aside>
         <main>
             <h1 id="title">Welcome!</h1>
+            <h1>User account database</h1>
             <form id="tabulation" action="user.jsp" method="GET">
-                <input type="button" name="reportgen" id="reportgen" value="Generate ID card" onclick="report()"/>
+                <input type="hidden" name="action" id="action" value="edit"/>
+                <input type="hidden" name="admin" id="admin" value="<%= adm %>"/>
+                <table id='systemtabulation'>
+                    <tr>
+                        <th></th>
+                        <th>Email address</th>
+                        <th>Name</th>
+                        <th>User type</th>
+                    </tr>
+                    <%
+                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS ORDER BY USERLASTNAME ASC");
+                        while (rs.next())
+                        {
+                    %>
+                        <tr onclick="pickMe('<%= rs.getString("USEREMAIL") %>')">
+                            <td><input type="radio" name="email" value="<%= rs.getString("USEREMAIL") %>"></td>
+                            <td><%= rs.getString("USEREMAIL") %></td>
+                            <td><%= rs.getString("USERLASTNAME").toUpperCase() %>, <%= rs.getString("USERGIVENNAME") %></td>
+                            <td><%= rs.getInt("USERTYPE") == 2? "Administrator":rs.getInt("USERTYPE") == 1?"Teacher":"Student" %></td>
+                        </tr>
+                    <%
+                        }
+                    %>
+                </table>
+                <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
         </main>
         <aside class="column" id="right">
@@ -95,7 +130,7 @@
                 <li><p class="tocitem2"><%= appelation %></p></li>
             </ul>
         </aside>
-        <%@ include file="assets/footer.jsp" %>
+        <%@ include file="/assets/footer.jsp" %>
         <script> 
             function updateThings()
             {
@@ -130,7 +165,7 @@
                     let form = document.getElementById("tabulation");
                     document.getElementById("action").value = "delete";
                     document.querySelectorAll("input[name=email]").forEach(x => { x.name="username"; });
-                    form.action = "clerk"; form.method = "POST";
+                    form.action = "clerk?department=user"; form.method = "POST";
                     form.submit();
                 }
             }
@@ -138,7 +173,7 @@
             function report()
             {
                 let form = document.getElementById("tabulation");
-                form.action = "report"; form.method = "POST";
+                form.action = "report?department=user"; form.method = "POST";
                 form.submit(); 
             }
             

@@ -67,7 +67,7 @@ public class CaptchaServlet extends HttpServlet
         if (checkCaptcha(cc,captchatest))
         {
             sesh.setAttribute("captcha",1);
-            response.sendRedirect("success.jsp");
+            response.sendRedirect("home");
         }
         else
         {

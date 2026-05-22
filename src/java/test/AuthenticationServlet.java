@@ -63,7 +63,8 @@ public class AuthenticationServlet extends HttpServlet {
         {
             String uname =  request.getParameter("username").toLowerCase(),
                     pwod = AuthenticationExtras.encrypt(request.getServletContext().getInitParameter("EncryptionKey").getBytes(), request.getParameter("password"));
-
+            
+            int type = 0;
             //response.getWriter().println(pwod); return;
 
             boolean yes = false;
@@ -73,8 +74,11 @@ public class AuthenticationServlet extends HttpServlet {
             try (PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");)
             {
                 pstm.setString(1, uname); ResultSet res = pstm.executeQuery();
-                while (res.next()) if (res.getString("USERPASSWORD").equals(pwod)) yes = true;
+                while (res.next()) { if (res.getString("USERPASSWORD").equals(pwod)) yes = true;
                 else throw new IncorrectPasswordException();
+                type = res.getInt("USERTYPE");
+                System.err.println(type);
+                }
             }
             catch (SQLException e)
             {
@@ -98,6 +102,7 @@ public class AuthenticationServlet extends HttpServlet {
                 cx.setAttribute("Password", dbPassword);
                 cx.setAttribute("Uri", dbUri);
                 sesh.setAttribute("username",uname);
+                sesh.setAttribute("type", type);
                 sesh.setAttribute("captcha",0);
                 response.sendRedirect("captcha");
             }

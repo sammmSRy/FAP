@@ -9,7 +9,7 @@
 <%
     HttpSession sesh = request.getSession(false);
     if (sesh != null) if ((Integer)sesh.getAttribute("captcha")!=1) sesh.invalidate();
-    else response.sendRedirect("success.jsp");
+    else response.sendRedirect("home");
 %>
 <!DOCTYPE html>
 <html>
@@ -53,10 +53,10 @@
                 <input type="password" id="password" name="password">
                 <br/> <br/>
                 <input type="submit" value="Login">
-            </form>
+            </form><!--
             <form action="makeme" method="POST">
                 <input type="submit" value="Evil button!">
-            </form>
+            </form>-->
         </main>
         <%@ include file="assets/footer.jsp" %>
     </body>

@@ -30,43 +30,45 @@
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     
     String currUser = res.getString("USEREMAIL");
+    int type = res.getInt("USERTYPE");
     String appelation = "Student";
-    switch (res.getInt("USERTYPE"))
+    switch (type)
     {
         case 2: appelation="Administrator"; break;
         case 1: appelation="Teacher"; break;
         case 0: default: break;
     }
     
-    boolean adm = appelation.equals("Administrator");
+    boolean adm = type >= 1;
     pstm.close();
     
     if (!adm) response.sendError(403);
-    String mail = "", fname = "", lname = "", pwod = ""; int type = 0; String uuid = "";
+    String name = "", desc = "", uppr = "", start = "", end = ""; int scor = 0; String uuid = ""; boolean status = false;
     
     if (request.getParameter("action").equals("edit"))
     {
-        pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
-        pstm.setString(1, request.getParameter("email"));
+        pstm = con.prepareStatement("SELECT * FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID WHERE ACTIVITYID = ?");
+        pstm.setBytes(1, Base64.getDecoder().decode(request.getParameter("id")));
         res = pstm.executeQuery();
         boolean yes = false;
         
         while (res.next())
         {
+            SimpleDateFormat tempsdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
             yes = true;
-            uuid = Base64.getEncoder().encodeToString(res.getBytes("USERID"));
-            mail = res.getString("USEREMAIL");
-            fname = res.getString("USERGIVENNAME");
-            lname = res.getString("USERLASTNAME");
-            pwod = test.AuthenticationExtras.decrypt(getServletContext().getInitParameter("EncryptionKey").getBytes(), res.getString("USERPASSWORD"));
-            type = res.getInt("USERTYPE");
+            uuid = Base64.getEncoder().encodeToString(res.getBytes("ACTIVITYID"));
+            name = res.getString("ACTIVITYNAME");
+            desc = res.getString("ACTIVITYDESCRIPTION");
+            scor = res.getInt("ACTIVITYSCORE");
+            uppr = res.getString("COURSENAME");
+            status = res.getBoolean("ACTIVITYSTATUS");
+            start = res.getTimestamp("ACTIVITYSTART") != null? tempsdf.format(res.getTimestamp("ACTIVITYSTART")) : null;
+            end = res.getTimestamp("ACTIVITYEND") != null? tempsdf.format(res.getTimestamp("ACTIVITYEND")): null;
         }
         
         if (!yes) throw new ServletException(new UsernameNotFoundException());
     }
     else uuid = Base64.getEncoder().encodeToString(ClerkExtras.uuidEncoding(UUID.randomUUID()));
-    
-System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -74,8 +76,8 @@ System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>User account information page &ndash; <%= mail.length() == 0? "(new)":ClerkExtras.abbr(fname) + " " + lname %> &mdash; MP2</title>
-        <link rel="stylesheet" href="main.css"/>
+        <title>Activity information page &ndash; <%= name.length() == 0? "(new)":name %> &mdash; MP2</title>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/main.css"/>
         <style>
             body { grid-template-columns:20% 1fr 20%;}
             main, footer { grid-column: 2; }
@@ -107,61 +109,72 @@ System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
         </style>
     </head>
     <body>
-        <%@ include file="assets/header.jsp" %>
+        <%@ include file="/assets/header.jsp" %>
         <main>
-            <h1 id="title">User account information page</h1>
-            <form action="clerk" method="POST" id="formy">
+            <h1 id="title">Activity information page</h1>
+            <form action="${pageContext.request.contextPath}/clerk" method="POST" id="formy">
                 <input type="hidden" name="uuid" value="<%= uuid %>"/>
-                <label for="username">Email address:</label>
-                <input type="text" id="username" name="email" value="<%= mail %>" required/>
+                <input type="hidden" name="department" value="activity"/>
+                <label for="name">Activity name:</label>
+                <input type="text" id="name" name="name" value="<%= name %>" required/>
                 <br/>
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" value="<%= pwod %>"/>
+                <label for="description">Description:</label>
+                <textarea rows="8" id="description" name="description" maxlength="256"><%= desc %></textarea>
+                &nbsp;&nbsp;&nbsp;
+                <label for="score">Highest possible score:</label>
+                <input type="number" id="score" name="score" value="<%= scor %>"/>
                 <br/>
-                <label for="givenname">Given name:</label>
-                <input type="text" id="givenname" name="givenname" value="<%= fname %>"/>
+                <label for="coursename">Part of the course:</label>
+                <input type="text" list="courselist" id="coursename" name="coursename" value="<%= uppr %>" placeholder="(if inexistent, new course)"/>
+                <datalist id="courselist">
+                    <%
+                        try
+                        {
+                           Statement stm = con.createStatement();
+                           ResultSet rs1 = stm.executeQuery("SELECT * FROM COURSES");
+                           while (rs1.next())
+                           {%>
+                            <option value="<%= rs1.getString("COURSENAME") %>"/>  
+                           <%}
+                        }
+                        catch (SQLException e) { throw new ServletException(e); }
+                    %>
+                </datalist>
                 <br/>
-                <label for="surname">Last name:</label>
-                <input type="text" id="surname" name="surname" value="<%= lname %>" required/>
+                <label for="startdate">Activity start date</label>
+                <input type="datetime-local" id="startdate" name="startdate" value="<%= start %>"/>
+                &nbsp;&nbsp;&nbsp;
+                <label for="enddate">Activity deadline</label>
+                <input type="datetime-local" id="enddate" name="enddate" value="<%= end %>"/>
                 <br/>
-                <label for="userrole">User type:</label>
-                <input type="range" id="userrole" name="userrole" value="<%= type %>" min="0" max="2" required/>
-                <p>0 = student; 1 = teacher; 2 = administrator;</p>
+                <label for="status">Enabled:</label>
+                <input type="checkbox" id="status" name="status" value="<%= status %>"/>
                 <br/> <br/>
                 <input type="hidden" id="action" name="action" value="<%= request.getParameter("action") %>"/>
                 <input type="submit" id="submitbtn" value="Update">
                 &nbsp;
                 <input type="button" value="Cancel" onclick="window.history.back();"/>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <input type="button" value="Delete" onclick="delUser();" <%= currUser.equals(mail)? "disabled":"" %> <%= request.getParameter("action").equals("new")? "disabled":"" %>/>
+                <input type="button" value="Delete" onclick="delUser();"<%= request.getParameter("action").equals("new")? "disabled":"" %>/>
             </form>
         </main>
-        <aside class="column" id="right"> </aside>
-        <%@ include file="assets/footer.jsp" %>
+        <aside class="column" id="right">
+            <h1>User account information</h1>
+            <ul>
+                <li><p class="tocitem1"><%= currUser %></p></li>
+                <li><p class="tocitem2"><%= appelation %></p></li>
+            </ul>
+        </aside>
+        <%@ include file="/assets/footer.jsp" %>
         <script>
-            var initAdmin = document.getElementById("userrole").value;
-            
-            document.getElementById("formy").addEventListener("submit", postEvents);
-            
-            function postEvents(event)
-            {
-                let currAdmin = document.getElementById("userrole").value;
-                if (initAdmin != currAdmin
-                        && !confirm(initAdmin>currAdmin?
-                "This user will lose some privileges if you continue."
-                :"This user will gain some privileges if you continue."))
-                    event.preventDefault();
-            }
-            
             function delUser()
             {
                 if
                 (confirm("Are you sure you want to delete '"
-                        + document.getElementById("givenname").value + " " + document.getElementById("surname").value + "'?"
+                        + document.getElementById("name").value + "'?"
                         + "\nThis user will be lost forever! (A long time!)"))
                 {        
                     let form = document.getElementById("formy");
-                    form.removeEventListener("submit", adminConsider);
                     document.getElementById("action").value = "delete";
                     form.submit();
                 }

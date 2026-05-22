@@ -21,7 +21,7 @@ public class CaptchaGenServlet extends HttpServlet
 {
     public static String capc;
     static String generateCaptcha(int n) {
-        String chrs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        String chrs = "abcdefghijkmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         String captcha = "";
         while (n-- > 0){
             int index = (int)(Math.random() * 62);

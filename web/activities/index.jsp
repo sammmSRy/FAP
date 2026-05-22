@@ -31,16 +31,14 @@
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     String currUser = res.getString("USEREMAIL");
-    
+    int type = res.getInt("USERTYPE");
     String appelation = "Student";
-    switch (res.getInt("USERTYPE"))
+    switch (type)
     {
         case 2: appelation="Administrator"; break;
         case 1: appelation="Teacher"; break;
         case 0: default: break;
     }
-    
-    boolean adm = appelation.equals("Administrator");
     pstm.close();
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -50,7 +48,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Dashboard &mdash; MP2</title>
-        <link rel="stylesheet" href="main.css"/>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/main.css"/>
         <style>
             body { grid-template-columns:20% 1fr 20%;}
             main, footer { grid-column: 2; }
@@ -81,11 +79,47 @@
         </style>
     </head>
     <body>
-        <%@ include file="assets/header.jsp" %>
+        <%@ include file="/assets/header.jsp" %>
+        <aside class="column" id="left">
+            <% if (type >= 1) { %>
+            <h1>Server tasks</h1>
+            <ul>
+                 <li><a class="tocitem2" id="mkuser" href="overview.jsp?action=new">Create new activity...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit activity...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete activity!</a></li>
+            </ul>
+            <% } else { %>
+            <h1>Server tasks</h1>
+            <ul>
+                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Check out activity...</a></li>
+            </ul>
+            <% } %>
+        </aside>
         <main>
-            <h1 id="title">Welcome!</h1>
-            <form id="tabulation" action="user.jsp" method="GET">
-                <input type="button" name="reportgen" id="reportgen" value="Generate ID card" onclick="report()"/>
+            <h1 id="title">Activity List</h1>
+            <form id="tabulation" action="overview.jsp" method="GET">
+                <input type="hidden" name="action" id="action" value="edit"/>
+                <table id='systemtabulation'>
+                    <tr>
+                        <th></th>
+                        <th>Activity name</th>
+                        <th>Part of course</th>
+                    </tr>
+                    <%
+                        ResultSet rs = con.createStatement().executeQuery("SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID ORDER BY ACTIVITYID ASC");
+                        while (rs.next())
+                        { String b6 = Base64.getEncoder().encodeToString(rs.getBytes("ACTIVITYID"));
+                    %>
+                        <tr onclick="pickMe('<%= b6 %>')">
+                            <td><input type="radio" name="id" value="<%= b6 %>"></td>
+                            <td><%= rs.getString("ACTIVITYNAME") %></td>
+                            <td><%= rs.getString("COURSENAME") %></td>
+                        </tr>
+                    <%
+                        }
+                    %>
+                </table>
+                <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
         </main>
         <aside class="column" id="right">
@@ -95,17 +129,14 @@
                 <li><p class="tocitem2"><%= appelation %></p></li>
             </ul>
         </aside>
-        <%@ include file="assets/footer.jsp" %>
+        <%@ include file="/assets/footer.jsp" %>
         <script> 
             function updateThings()
             {
-                if (document.querySelector('input[name="email"]:checked'))
+                if (document.querySelector('input[name="id"]:checked'))
                 {
                     document.getElementById("eduser").classList.remove("tocitemdisabled");
-                    if (document.querySelector('input[name="email"]:checked').value !== "<%= currUser %>")
-                        document.getElementById("deluser").classList.remove("tocitemdisabled");
-                    else document.getElementById("deluser").classList.add("tocitemdisabled");        
-                        
+                    document.getElementById("deluser").classList.remove("tocitemdisabled");                     
                 }
                 else
                 {
@@ -116,7 +147,7 @@
 
             function pickMe(where)
             {
-                document.querySelector('input[name=email][value="'+where+'"]').checked = true;
+                document.querySelector('input[name=id][value="'+where+'"]').checked = true;
                 updateThings(); // don't forget to fire event
             } 
             
@@ -124,13 +155,13 @@
             {
                 if
                 (confirm("Are you sure you want to delete '"
-                        + document.querySelector("input[name=email]:checked").value + "'?"
-                        + "\nThis user will be lost forever! (A long time!)"))
+                        + document.querySelector("input[name=id]:checked").value + "'?"
+                        + "\nThis activity will be lost forever! (A long time!)"))
                 {        
                     let form = document.getElementById("tabulation");
                     document.getElementById("action").value = "delete";
-                    document.querySelectorAll("input[name=email]").forEach(x => { x.name="username"; });
-                    form.action = "clerk"; form.method = "POST";
+                    document.querySelectorAll("input[name=id]").forEach(x => { x.name="username"; });
+                    form.action = "clerk?department=activity"; form.method = "POST";
                     form.submit();
                 }
             }
@@ -138,7 +169,7 @@
             function report()
             {
                 let form = document.getElementById("tabulation");
-                form.action = "report"; form.method = "POST";
+                form.action = "report?department=activity"; form.method = "POST";
                 form.submit(); 
             }
             

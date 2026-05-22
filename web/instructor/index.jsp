@@ -31,17 +31,19 @@
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     String currUser = res.getString("USEREMAIL");
-    
+    int type = res.getInt("USERTYPE");
     String appelation = "Student";
-    switch (res.getInt("USERTYPE"))
+    switch (type)
     {
         case 2: appelation="Administrator"; break;
         case 1: appelation="Teacher"; break;
         case 0: default: break;
     }
     
-    boolean adm = appelation.equals("Administrator");
+    boolean adm = type == 1;
     pstm.close();
+    
+    if (!adm) { response.sendError(403); return; }
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -50,7 +52,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Dashboard &mdash; MP2</title>
-        <link rel="stylesheet" href="main.css"/>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/main.css"/>
         <style>
             body { grid-template-columns:20% 1fr 20%;}
             main, footer { grid-column: 2; }
@@ -81,12 +83,20 @@
         </style>
     </head>
     <body>
-        <%@ include file="assets/header.jsp" %>
+        <%@ include file="/assets/header.jsp" %>
         <main>
             <h1 id="title">Welcome!</h1>
-            <form id="tabulation" action="user.jsp" method="GET">
-                <input type="button" name="reportgen" id="reportgen" value="Generate ID card" onclick="report()"/>
-            </form>
+            <h2>Select an action</h2>
+            <div style="text-align:center;vertical-align:top;">
+                <button onclick="location.href='students.jsp'" style="font-size:1.25rem; padding:20px;width:300px;height:300px; margin:10px;">
+                    <img src="${pageContext.request.contextPath}/assets/write.png" style="width:200px;margin:8px;">
+                    <br>My Students
+                </button>
+                <button onclick="location.href='courses'" style="font-size:1.25rem; padding:20px;width:300px;height:300px; margin:10px;">
+                    <img src="${pageContext.request.contextPath}/assets/write.png" style="width:200px;margin:8px;">
+                    <br>My Courses
+                </button>
+            </div>
         </main>
         <aside class="column" id="right">
             <h1>User account information</h1>
@@ -95,46 +105,8 @@
                 <li><p class="tocitem2"><%= appelation %></p></li>
             </ul>
         </aside>
-        <%@ include file="assets/footer.jsp" %>
+        <%@ include file="/assets/footer.jsp" %>
         <script> 
-            function updateThings()
-            {
-                if (document.querySelector('input[name="email"]:checked'))
-                {
-                    document.getElementById("eduser").classList.remove("tocitemdisabled");
-                    if (document.querySelector('input[name="email"]:checked').value !== "<%= currUser %>")
-                        document.getElementById("deluser").classList.remove("tocitemdisabled");
-                    else document.getElementById("deluser").classList.add("tocitemdisabled");        
-                        
-                }
-                else
-                {
-                    document.getElementById("eduser").classList.add("tocitemdisabled");
-                    document.getElementById("deluser").classList.add("tocitemdisabled");                    
-                }
-            }
-
-            function pickMe(where)
-            {
-                document.querySelector('input[name=email][value="'+where+'"]').checked = true;
-                updateThings(); // don't forget to fire event
-            } 
-            
-            function delUser() // beware the pipeline! javascript -> jakarta -> java -> jdbc
-            {
-                if
-                (confirm("Are you sure you want to delete '"
-                        + document.querySelector("input[name=email]:checked").value + "'?"
-                        + "\nThis user will be lost forever! (A long time!)"))
-                {        
-                    let form = document.getElementById("tabulation");
-                    document.getElementById("action").value = "delete";
-                    document.querySelectorAll("input[name=email]").forEach(x => { x.name="username"; });
-                    form.action = "clerk"; form.method = "POST";
-                    form.submit();
-                }
-            }
-            
             function report()
             {
                 let form = document.getElementById("tabulation");
