@@ -1,0 +1,34 @@
+html { font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+
+body
+{
+    display:grid; grid-template-columns: 1fr;
+    grid-template-rows: 80px auto 40px; gap: 0 .1rem;
+    height:max-content; width: 75vw; margin:5vh auto;
+    background-color: white; box-shadow: 0px 0px 25px #0000007f;
+}
+
+input[type="submit"], button { font-family: inherit; font-size: inherit; }
+
+div#errormsg
+{
+    box-shadow: 0px 0px 25px #0000007f;
+    width:50%; height:max-content; padding:2rem; margin:auto;
+    background-color: white;
+}
+div#errormsg h2
+{
+    font-family:'Segoe UI Light', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size:4rem; font-weight:normal; text-align:center; margin:0; margin-bottom:2rem;
+    border-bottom: 1px solid var(--dark);
+}
+div#errormsg p#explanation
+{
+    font-size:1.25rem; text-align: justify;
+}
+div#errormsg p#errorcode, div#errormsg p#copy
+{
+    font-size:.75rem; color: var(--normal); margin:0;
+}
+
+div#errormsg p#errorcode {font-style: italic; text-align: right;}

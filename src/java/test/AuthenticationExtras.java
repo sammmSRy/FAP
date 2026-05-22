@@ -1,11 +1,11 @@
-package com.project;
+package test;
 import java.io.*;
 import java.security.*;
 import java.util.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import javax.servlet.*;
-import com.project.LoginServlet;
+import test.AuthenticationServlet;
 import java.sql.*;
 
 public class AuthenticationExtras

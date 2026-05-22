@@ -1,13 +1,25 @@
-package com.project;
-
-import java.io.*;
-import java.sql.*;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package test;
+import test.warden.*;
+import java.util.*;
 import javax.servlet.*;
 import javax.servlet.http.*;
-import com.project.warden.*;
-
-public class LoginServlet extends HttpServlet {
-
+import java.io.*;
+import java.sql.*;
+import javax.security.sasl.*;
+import java.security.*;
+import javax.crypto.*;
+import javax.crypto.spec.*;
+/**
+ * The main class for the JDBC pair-up with the web server.
+ * @author Adrian
+ */
+public class AuthenticationServlet extends HttpServlet {
+    
     Connection con;
     static String dbClassPath, dbUsername, dbPassword, dbUri;
     static byte[] key;
@@ -43,7 +55,8 @@ public class LoginServlet extends HttpServlet {
         }
     }
     
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected @Override void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
+    {
         // parameters in post
         // username, password
         try
@@ -74,7 +87,7 @@ public class LoginServlet extends HttpServlet {
                 if (sesh != null)
                 {
                     sesh.invalidate();
-                    response.sendRedirect("error_session.jsp");
+                    response.sendRedirect("err/auth_pxs.htm");
                     return;
                 }
 

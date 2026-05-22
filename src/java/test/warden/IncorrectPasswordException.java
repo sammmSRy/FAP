@@ -3,13 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.project.warden;
+package test.warden;
 
 /**
  *
  * @author Adrian
  */
-public class InvalidEntryException extends javax.security.sasl.AuthenticationException {
+public class IncorrectPasswordException extends javax.security.sasl.AuthenticationException {
 
     
 }

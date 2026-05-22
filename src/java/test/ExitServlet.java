@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.project;
+package test;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
