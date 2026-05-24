@@ -45,7 +45,7 @@
     if (!adm) response.sendError(403);
     String name = "", desc = "", uppr = "", start = "", end = ""; int scor = 0; String uuid = ""; boolean status = false;
     
-    if (type < 2)
+    if (type < 2 && request.getParameter("action").equals("edit"))
     {
         pstm = con.prepareStatement("SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ? AND ACTIVITYID = ?");
         pstm.setBytes(1, currId);

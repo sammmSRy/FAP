@@ -30,7 +30,7 @@
     
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
-    String currUser = res.getString("USEREMAIL");
+    String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
     int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
@@ -102,10 +102,9 @@
                         <th></th>
                         <th>Email address</th>
                         <th>Name</th>
-                        <th>Enrolled in</th>
                     </tr>
                     <%
-                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS INNER JOIN REGISTRATION ON USERS.USERID = REGISTRATION.REGISTRATIONWORKER WHERE USERTYPE = 0 ORDER BY USERLASTNAME ASC");
+                        ResultSet rs = con.createStatement().executeQuery("SELECT DISTINCT USEREMAIL, USERLASTNAME, USERGIVENNAME, USERID FROM USERS INNER JOIN REGISTRATION ON USERS.USERID = REGISTRATION.REGISTRATIONWORKER WHERE USERTYPE = 0 ORDER BY USERLASTNAME ASC");
                         while (rs.next())
                         {
                     %>
@@ -113,7 +112,6 @@
                             <td><input type="radio" name="email" value="<%= rs.getString("USEREMAIL") %>"></td>
                             <td><%= rs.getString("USEREMAIL") %></td>
                             <td><%= rs.getString("USERLASTNAME").toUpperCase() %>, <%= rs.getString("USERGIVENNAME") %></td>
-                            <td>TBD</td>
                         </tr>
                     <%
                         }

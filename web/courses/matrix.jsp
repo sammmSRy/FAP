@@ -3,6 +3,7 @@
     Created on : 01-Mar-2026, 18:36:21
     Author     : Adrian
 --%>
+<%@page import="test.warden.*"%>
 <%@page import="java.sql.*"%>
 <% 
     response.setHeader("Cache-Control","no-cache, no-store, must-revalidate"); // HTTP 1.1
@@ -31,7 +32,7 @@
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
-    int type = res.getInt("USERTYPE"); String currUserId = Base64.getEncoder().encodeToString(res.getBytes("USERID"));
+    int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
     {
@@ -40,10 +41,27 @@
         case 0: default: break;
     }
     
-    boolean adm = type == 2;
+    boolean adm = type >= 1;
     pstm.close();
     
     if (!adm) { response.sendError(403); return; }
+    
+    String name = "", desc = ""; byte[] currId = null;
+    pstm = con.prepareStatement("SELECT * FROM COURSES WHERE COURSEID = ?");
+    pstm.setBytes(1, Base64.getDecoder().decode(request.getParameter("id")));
+    res = pstm.executeQuery();
+    boolean yes = false;
+
+    while (res.next())
+    {
+        yes = true;
+        currId = res.getBytes("COURSEID");
+        name = res.getString("COURSENAME");
+        desc = res.getString("COURSEDESCRIPTION");
+    }
+
+    if (!yes) throw new ServletException(new UsernameNotFoundException());
+    
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -51,7 +69,7 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Dashboard &mdash; MP2</title>
+        <title>Course matrix &ndash; <%= name %> &mdash; MP2</title>
         <link rel="stylesheet" href="${pageContext.request.contextPath}/main.css"/>
         <style>
             body { grid-template-columns:20% 1fr 20%;}
@@ -87,25 +105,29 @@
         <aside class="column" id="left">
             <h1>Tasks</h1>
             <ul>
-                <li><a class="tocitem2" id="mkuser" href="user.jsp?action=new">Create new user...</a></li>
-                <li><a class="tocitem2" id="mkuser" href="enrol.jsp">Enrol a member...</a></li>
-                <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit user...</a></li>
-                <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete user!</a></li>
+                <li><a class="tocitem2" id="mkuser" href="${pageContext.request.contextPath}/admin/enrol.jsp">Enrol a student...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Remove student!</a></li>
             </ul>
         </aside>
         <main>
-            <h1 id="title">User list</h1>
+            <h1 id="title">Course matrix</h1>
+            <h2><%= name %></h2>
+            <p><%= desc %></p>
             <form id="tabulation" action="user.jsp" method="GET">
                 <input type="hidden" name="action" id="action" value="edit"/>
+                <input type="hidden" name="courseid" id="courseid" value="<%=Base64.getEncoder().encodeToString(currId)%>"/>
+                <input type="hidden" name="department" id="department" value="user"/>
                 <table id='systemtabulation'>
                     <tr>
                         <th></th>
                         <th>Email address</th>
                         <th>Name</th>
-                        <th>User type</th>
+                        <% if (type == 2) { %><th>Type</th><% } %>
                     </tr>
                     <%
-                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS ORDER BY USERLASTNAME ASC");
+                        PreparedStatement pstm1 = con.prepareStatement("SELECT * FROM USERS INNER JOIN REGISTRATION ON USERS.USERID = REGISTRATION.REGISTRATIONWORKER WHERE USERTYPE <= "+(type-1)+" AND REGISTRATIONSUBJECT = ? ORDER BY USERLASTNAME ASC");
+                        pstm1.setBytes(1, currId);
+                        ResultSet rs = pstm1.executeQuery();
                         while (rs.next())
                         {
                             String bs6 = Base64.getEncoder().encodeToString(rs.getBytes("USERID"));
@@ -114,7 +136,7 @@
                             <td><input type="radio" name="id" value="<%= bs6 %>"></td>
                             <td><%= rs.getString("USEREMAIL") %></td>
                             <td><%= rs.getString("USERLASTNAME").toUpperCase() %>, <%= rs.getString("USERGIVENNAME") %></td>
-                            <td><%= rs.getInt("USERTYPE") == 2? "Administrator":rs.getInt("USERTYPE") == 1?"Teacher":"Student" %></td>
+                            <% if (type == 2) { %><td><%= rs.getInt("USERTYPE") == 1? "Teacher":"Student" %></td><% } %>
                         </tr>
                     <%
                         }
@@ -130,15 +152,10 @@
             {
                 if (document.querySelector('input[name="id"]:checked'))
                 {
-                    document.getElementById("eduser").classList.remove("tocitemdisabled");
-                    if (document.querySelector('input[name="id"]:checked').value !== "<%= currUserId %>")
-                        document.getElementById("deluser").classList.remove("tocitemdisabled");
-                    else document.getElementById("deluser").classList.add("tocitemdisabled");        
-                        
+                    document.getElementById("deluser").classList.remove("tocitemdisabled");          
                 }
                 else
                 {
-                    document.getElementById("eduser").classList.add("tocitemdisabled");
                     document.getElementById("deluser").classList.add("tocitemdisabled");                    
                 }
             }
@@ -152,13 +169,13 @@
             function delUser() // beware the pipeline! javascript -> jakarta -> java -> jdbc
             {
                 if
-                (confirm("Are you sure you want to delete '"
+                (confirm("Are you sure you want to remove '"
                         + document.querySelector("input[name=id]:checked").value + "'?"
-                        + "\nThis user will be lost forever! (A long time!)"))
+                        + "\nThis student's history will be lost forever! (A long time!)"))
                 {        
                     let form = document.getElementById("tabulation");
-                    document.getElementById("action").value = "delete";
-                    form.action = "${pageContext.request.contextPath}/clerk?department=user"; form.method = "POST";
+                    document.getElementById("action").value = "delist";
+                    form.action = "${pageContext.request.contextPath}/clerk"; form.method = "POST";
                     form.submit();
                 }
             }
@@ -166,7 +183,7 @@
             function report()
             {
                 let form = document.getElementById("tabulation");
-                form.action = "${pageContext.request.contextPath}/report?department=user"; form.method = "POST";
+                form.action = "report"; form.method = "POST";
                 form.submit(); 
             }
             

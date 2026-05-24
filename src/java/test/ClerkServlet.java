@@ -60,6 +60,20 @@ public class ClerkServlet extends HttpServlet
     
     protected @Override void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
+        int type = 0;
+        try (PreparedStatement pstm2 = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?"))
+        {
+            pstm2.setString(1, request.getSession(false).getAttribute("username").toString());
+            ResultSet res2 = pstm2.executeQuery(); res2.next();
+            type = res2.getInt("USERTYPE");
+        }
+        catch (SQLException e)
+        {
+            System.err.println("Error in authentication process!");
+            System.err.println(e.getMessage());
+            throw new ServletException(e);
+        }
+
         if (request.getParameter("department").equals("user"))
         {
             // parameters in post
@@ -89,24 +103,42 @@ public class ClerkServlet extends HttpServlet
                     try
                     {
                         PreparedStatement pstm = con.prepareStatement("SELECT * FROM REGISTRATION WHERE REGISTRATIONSUBJECT = ? AND REGISTRATIONWORKER = ?");
-
                         boolean px=false;
-                        pstm.setBytes(1, id); pstm.setBytes(2, courseid);
+                        pstm.setBytes(2, id); pstm.setBytes(1, courseid);
                         
                         ResultSet res = pstm.executeQuery();
                         while (res.next()) px = true;
 
                         if (px) throw new ServletException(new UsernameFoundException());
-                        
-                        pstm =  con.prepareStatement("INSERT INTO REGISTRATION (REGISTRATIONID, REGISTRATIONSUBJECT, REGISTRATIONWORKER) VALUES (?, ?, ?)");
-                        pstm.setBytes(1, ClerkExtras.uuidEncoding(UUID.randomUUID()));
-                        pstm.setBytes(2, courseid);
-                        pstm.setBytes(3, id);
-                        yes = pstm.executeUpdate() != 0;
+                        else
+                        {
+                            pstm = con.prepareStatement("INSERT INTO REGISTRATION (REGISTRATIONID, REGISTRATIONSUBJECT, REGISTRATIONWORKER) VALUES (?, ?, ?)");
+                            pstm.setBytes(1, ClerkExtras.uuidEncoding(UUID.randomUUID()));
+                            pstm.setBytes(2, courseid);
+                            pstm.setBytes(3, id);
+                            yes = pstm.executeUpdate() != 0;
 
-                        System.err.print(yes);
-
+                            System.err.print(px);
+                        }
                         pstm.close();
+                    }
+                    catch (SQLException e)
+                    {
+                        System.err.println("Error in authentication process!");
+                        System.err.println(e.getMessage());
+                        throw new ServletException(e);
+                    }
+                }
+                else if (action.equals("delist"))
+                {
+                    byte[] courseid = Base64.getDecoder().decode(request.getParameter("courseid"));
+                    try
+                    (PreparedStatement pstm = con.prepareStatement("DELETE FROM REGISTRATION WHERE REGISTRATIONSUBJECT = ? AND REGISTRATIONWORKER = ?");)
+                    {
+                        pstm.setBytes(1, courseid);
+                        pstm.setBytes(2, id);
+                        yes = pstm.executeUpdate() != 0;
+                        System.err.print(yes);
                     }
                     catch (SQLException e)
                     {
@@ -117,16 +149,14 @@ public class ClerkServlet extends HttpServlet
                 }
                 else
                 {
-                 String email = request.getParameter("email"),
-                        pwod = AuthenticationExtras.encrypt(request.getServletContext().getInitParameter("EncryptionKey").getBytes(), request.getParameter("password")),
-                        
-                        givenname = request.getParameter("givenname"),
-                        surname = request.getParameter("surname");
-
-                int type = Integer.parseInt(request.getParameter("userrole"));
-
                     if (action.equals("edit"))
                     {
+                        String email = request.getParameter("email"),
+                        pwod = AuthenticationExtras.encrypt(request.getServletContext().getInitParameter("EncryptionKey").getBytes(), request.getParameter("password")),
+                        givenname = request.getParameter("givenname"),
+                        surname = request.getParameter("surname");
+                        int type1 = Integer.parseInt(request.getParameter("userrole")); 
+                        
                         try
                         (PreparedStatement pstm = con.prepareStatement("UPDATE USERS SET USEREMAIL = ?, USERGIVENNAME = ?, USERLASTNAME = ?, USERPASSWORD = ?, USERTYPE = ? WHERE USERID = ?");)
                         {
@@ -135,7 +165,7 @@ public class ClerkServlet extends HttpServlet
                             pstm.setString(2, givenname);
                             pstm.setString(3, surname);
                             pstm.setString(4, pwod);
-                            pstm.setInt(5, type);
+                            pstm.setInt(5, type1);
                             yes = pstm.executeUpdate() != 0;
                             System.err.print(yes);
                         }
@@ -148,6 +178,12 @@ public class ClerkServlet extends HttpServlet
                     }
                     else if (action.equals("new"))
                     {
+                        String email = request.getParameter("email"),
+                        pwod = AuthenticationExtras.encrypt(request.getServletContext().getInitParameter("EncryptionKey").getBytes(), request.getParameter("password")),
+                        givenname = request.getParameter("givenname"),
+                        surname = request.getParameter("surname");
+                        int type1 = Integer.parseInt(request.getParameter("userrole"));
+                        
                         try
                         {
                             PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
@@ -164,7 +200,7 @@ public class ClerkServlet extends HttpServlet
                             pstm.setString(3, givenname);
                             pstm.setString(4, surname);
                             pstm.setString(5, pwod);
-                            pstm.setInt(6, type);
+                            pstm.setInt(6, type1);
                             yes = pstm.executeUpdate() != 0;
 
                             System.err.print(yes);
@@ -181,9 +217,9 @@ public class ClerkServlet extends HttpServlet
                     else if (action.equals("delete"))
                     {
                         try
-                        (PreparedStatement pstm = con.prepareStatement("DELETE FROM USERS WHERE USEREMAIL = ?");)
+                        (PreparedStatement pstm = con.prepareStatement("DELETE FROM USERS WHERE USERID = ?");)
                         {
-                            pstm.setString(1, email);
+                            pstm.setBytes(1, id);
                             yes = pstm.executeUpdate() != 0;
                             System.err.print(yes);
                         }
@@ -240,7 +276,8 @@ public class ClerkServlet extends HttpServlet
                     ResultSet rs = pstm.executeQuery();
                     boolean p = false; while (rs.next()) { p = true; cors = rs.getBytes("COURSEID"); }
                     pstm.close();
-                    if (!p) // create new course hehehehe
+                    System.err.println(type == 2 && !p);
+                    if (!p) // create new course if admin
                     {     
                         System.out.println("hey!");
                         try (PreparedStatement pstm1 = con.prepareStatement("INSERT INTO COURSES (COURSEID, COURSENAME) VALUES (?,?)"))
@@ -252,6 +289,7 @@ public class ClerkServlet extends HttpServlet
                         }
                         catch (SQLException e) { throw e; }
                     }
+                    else if (type != 2) throw new ServletException(new UsernameNotFoundException());
                 }
                 catch (SQLException e)
                 {
@@ -403,6 +441,83 @@ public class ClerkServlet extends HttpServlet
                     (PreparedStatement pstm = con.prepareStatement("DELETE FROM COURSES WHERE COURSEID = ?");)
                     {
                         pstm.setBytes(1, id);
+                        yes = pstm.executeUpdate() != 0;
+                        System.err.print(yes);
+                    }
+                    catch (SQLException e)
+                    {
+                        System.err.println("Error in authentication process!");
+                        System.err.println(e.getMessage());
+                        throw new ServletException(e);
+                    }
+                }
+                if (!yes) response.sendError(400);
+                response.sendRedirect("./");
+            }
+            catch (ServletException f) { throw f; } // hot-potato the SQLException
+            catch (Exception e) { throw new ServletException(e); } // comes from decrypt
+        }
+        else if (request.getParameter("department").equals("job"))
+        {
+            // parameters in post
+            // username, password
+            System.out.println("a: "+(request.getParameter("department") == null? "fah":request.getParameter("department")));
+            System.out.println("b: "+(request.getParameter("jobid") == null? "fah":request.getParameter("jobid")));
+            System.out.println("c: "+(request.getParameter("actid") == null? "fah":request.getParameter("actid")));
+            System.out.println("d: "+(request.getParameter("userid") == null? "fah":request.getParameter("userid")));
+            System.out.println("e: "+(request.getParameter("status") == null? "fah":request.getParameter("status")));
+            System.out.println("f: "+(request.getParameter("score") == null? "fah":request.getParameter("score")));
+            System.out.println("g: "+(request.getParameter("action") == null? "fah":request.getParameter("action")));
+            //return;
+        
+            try
+            {
+                byte[] jobid = Base64.getDecoder().decode(request.getParameter("jobid"));
+                String action = request.getParameter("action");
+
+                boolean yes = false;
+
+                if (action.equals("submit"))
+                {
+                    try(PreparedStatement pstm = con.prepareStatement("UPDATE JOB SET JOBSTATUS = ?, JOBEND = ? WHERE JOBID = ?");)
+                    {
+                        pstm.setBytes(3, jobid);
+                        pstm.setInt(1, 1);
+                        pstm.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+                        yes = pstm.executeUpdate() != 0;
+                        System.err.print(yes);
+                    }
+                    catch (SQLException e)
+                    {
+                        System.err.println("Error in authentication process!");
+                        System.err.println(e.getMessage());
+                        throw new ServletException(e);
+                    }
+                }
+                else if (action.equals("grade"))
+                {
+                    int score = Integer.valueOf(request.getParameter("score"));
+                    try(PreparedStatement pstm = con.prepareStatement("UPDATE JOB SET JOBSTATUS = ?, JOBSCORE = ? WHERE JOBID = ?");)
+                    {
+                        pstm.setBytes(3, jobid);
+                        pstm.setInt(2, score);
+                        pstm.setInt(1, 2);
+                        yes = pstm.executeUpdate() != 0;
+                        System.err.print(yes);
+                    }
+                    catch (SQLException e)
+                    {
+                        System.err.println("Error in authentication process!");
+                        System.err.println(e.getMessage());
+                        throw new ServletException(e);
+                    }
+                }
+                else if (action.equals("delete"))
+                {
+                    try
+                    (PreparedStatement pstm = con.prepareStatement("DELETE FROM JOB WHERE JOBID = ?");)
+                    {
+                        pstm.setBytes(1, jobid);
                         yes = pstm.executeUpdate() != 0;
                         System.err.print(yes);
                     }

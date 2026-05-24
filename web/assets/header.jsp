@@ -37,7 +37,6 @@
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/admin/staff.jsp">Stakeholders</a>
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/courses">Courses</a>
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/activities">Activities</a>
-                        <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/timeline">Recent events</a>
                     <% } else if ((Integer)sesh.getAttribute("type") == 1) { %> 
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/instructor">Dashboard</a>
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/instructor/students.jsp">Students</a>

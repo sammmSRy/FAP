@@ -203,6 +203,7 @@
                         }
                     %>
                 </table>
+                <% if (type < 2) { %><p style="font-size:smaller; font-style:italic">Your course not in the list? Contact your <%= type == 1? "system administrator":"teacher" %> to enrol you!</p><% } %>
                 <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
         </main>

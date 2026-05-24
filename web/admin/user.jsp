@@ -47,8 +47,8 @@
     
     if (request.getParameter("action").equals("edit"))
     {
-        pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
-        pstm.setString(1, request.getParameter("email"));
+        pstm = con.prepareStatement("SELECT * FROM USERS WHERE USERID = ?");
+        pstm.setBytes(1, Base64.getDecoder().decode(request.getParameter("id")));
         res = pstm.executeQuery();
         boolean yes = false;
         
@@ -111,7 +111,7 @@ System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
         <%@ include file="/assets/header.jsp" %>
         <main>
             <h1 id="title">User account information page</h1>
-            <form action="clerk" method="POST" id="formy">
+            <form action="${pageContext.request.contextPath}/clerk" method="POST" id="formy">
                 <input type="hidden" name="id" value="<%= uuid %>"/>
                 <input type="hidden" name="department" value="user"/>
                 <label for="username">Email address:</label>

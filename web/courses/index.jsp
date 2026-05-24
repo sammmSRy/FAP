@@ -87,14 +87,15 @@
             <h1>Tasks</h1>
             <% if (type >= 1) { %>
             <ul>
-                 <li><a class="tocitem2" id="mkuser" href="overview.jsp?action=new">Create new course...</a></li>
-                 <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out course...</a></li>
-                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit course...</a></li>
-                 <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete course!</a></li>
+                <% if (type == 2) { %><li><a class="tocitem2" id="mkuser" href="overview.jsp?action=new">Create new course...</a></li><% } %>
+                <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out course...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit course...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="matuser" onclick="mat()">Check out members...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete course!</a></li>
             </ul>
             <% } else { %>
             <ul>
-                 <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out course...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out course...</a></li>
             </ul>
             <% } %>
         </aside>
@@ -109,9 +110,10 @@
                         <th>Course name</th>
                     </tr>
                     <%                        
+                        System.out.println("Retrieving set");
                         ResultSet rs = null; 
 
-                        String quer = "SELECT * FROM COURSES "+ (type < 2? "INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ?":null) +" ORDER BY COURSEID ASC";
+                        String quer = "SELECT * FROM COURSES "+ (type < 2? "INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ?":"") +" ORDER BY COURSEID ASC";
                         PreparedStatement ps1 = con.prepareStatement(quer); if (type < 2) ps1.setBytes(1, currId);
                         rs = ps1.executeQuery();
                         
@@ -126,6 +128,8 @@
                         }
                     %>
                 </table>
+                <% if (type < 2) { %><p style="font-size:smaller; font-style:italic">Your course not in the list? Contact your <%= type == 1? "system administrator":"teacher" %> to enrol you!</p><% } %>
+                
                 <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
         </main>
@@ -138,12 +142,14 @@
                 {
                     <% if (type >= 1) { %> document.getElementById("eduser").classList.remove("tocitemdisabled"); <% } %>
                     <% if (type >= 1) { %> document.getElementById("deluser").classList.remove("tocitemdisabled"); <% } %>
-                    document.getElementById("gouser").classList.remove("tocitemdisabled");       
+                    <% if (type >= 1) { %> document.getElementById("matuser").classList.remove("tocitemdisabled"); <% } %>
+                    document.getElementById("gouser").classList.remove("tocitemdisabled");
                 }
                 else
                 {
                     <% if (type >= 1) { %> document.getElementById("eduser").classList.add("tocitemdisabled"); <% } %>
-                    <% if (type >= 1) { %> document.getElementById("deluser").classList.add("tocitemdisabled"); <% } %>                
+                    <% if (type >= 1) { %> document.getElementById("deluser").classList.add("tocitemdisabled"); <% } %>
+                    <% if (type >= 1) { %> document.getElementById("matuser").classList.add("tocitemdisabled"); <% } %>
                     document.getElementById("gouser").classList.add("tocitemdisabled");    
                 }
             }
@@ -172,6 +178,12 @@
             {
                 let id = document.querySelector('input[name=id]:checked').value;
                 window.location.assign("${pageContext.request.contextPath}/activities/?id="+encodeURIComponent(id));
+            }
+            
+            function mat()
+            {
+                let id = document.querySelector('input[name=id]:checked').value;
+                window.location.assign("${pageContext.request.contextPath}/courses/matrix.jsp?id="+encodeURIComponent(id));
             }
             
             function report()
