@@ -29,7 +29,7 @@
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     
-    String currUser = res.getString("USEREMAIL");
+    String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
     int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
@@ -112,7 +112,7 @@ System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
         <main>
             <h1 id="title">User account information page</h1>
             <form action="clerk" method="POST" id="formy">
-                <input type="hidden" name="uuid" value="<%= uuid %>"/>
+                <input type="hidden" name="id" value="<%= uuid %>"/>
                 <input type="hidden" name="department" value="user"/>
                 <label for="username">Email address:</label>
                 <input type="text" id="username" name="email" value="<%= mail %>" required/>
@@ -138,13 +138,7 @@ System.out.println(currUser + " " + mail + ": " + currUser.equals(mail));
                 <input type="button" value="Delete" onclick="delUser();" <%= currUser.equals(mail)? "disabled":"" %> <%= request.getParameter("action").equals("new")? "disabled":"" %>/>
             </form>
         </main>
-        <aside class="column" id="right">
-            <h1>User account information</h1>
-            <ul>
-                <li><p class="tocitem1"><%= currUser %></p></li>
-                <li><p class="tocitem2"><%= appelation %></p></li>
-            </ul>
-        </aside>
+        <%@ include file="/assets/rightbar.jsp" %>
         <%@ include file="/assets/footer.jsp" %>
         <script>
             var initAdmin = document.getElementById("userrole").value;

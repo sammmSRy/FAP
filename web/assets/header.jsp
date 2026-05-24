@@ -46,6 +46,7 @@
                     <% } else if ((Integer)sesh.getAttribute("type") == 0) { %> 
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/student">Dashboard</a>
                         <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/courses">My Courses</a>
+                        <a class="lomenuit sitemaplink" href="${pageContext.request.contextPath}/activities">My Activities</a>
                     <% } %>
                 </nav>
             </td>

@@ -28,8 +28,8 @@
     
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
-    
-    String currUser = res.getString("USEREMAIL");
+    byte[] currId = res.getBytes("USERID");
+    String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
     int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
@@ -44,6 +44,16 @@
     
     if (!adm) response.sendError(403);
     String name = "", desc = "", uppr = "", start = "", end = ""; int scor = 0; String uuid = ""; boolean status = false;
+    
+    if (type < 2)
+    {
+        pstm = con.prepareStatement("SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ? AND ACTIVITYID = ?");
+        pstm.setBytes(1, currId);
+        pstm.setBytes(2, Base64.getDecoder().decode(request.getParameter("id")));
+        res = pstm.executeQuery();
+        boolean yes = false; while (res.next()) yes = true; pstm.close();
+        if (!yes) response.sendError(403);
+    }
     
     if (request.getParameter("action").equals("edit"))
     {
@@ -113,7 +123,7 @@
         <main>
             <h1 id="title">Activity information page</h1>
             <form action="${pageContext.request.contextPath}/clerk" method="POST" id="formy">
-                <input type="hidden" name="uuid" value="<%= uuid %>"/>
+                <input type="hidden" name="id" value="<%= uuid %>"/>
                 <input type="hidden" name="department" value="activity"/>
                 <label for="name">Activity name:</label>
                 <input type="text" id="name" name="name" value="<%= name %>" required/>
@@ -158,13 +168,7 @@
                 <input type="button" value="Delete" onclick="delUser();"<%= request.getParameter("action").equals("new")? "disabled":"" %>/>
             </form>
         </main>
-        <aside class="column" id="right">
-            <h1>User account information</h1>
-            <ul>
-                <li><p class="tocitem1"><%= currUser %></p></li>
-                <li><p class="tocitem2"><%= appelation %></p></li>
-            </ul>
-        </aside>
+        <%@ include file="/assets/rightbar.jsp" %>
         <%@ include file="/assets/footer.jsp" %>
         <script>
             function delUser()

@@ -85,16 +85,15 @@
     <body>
         <%@ include file="/assets/header.jsp" %>
         <aside class="column" id="left">
-            <h1>Server tasks</h1>
+            <h1>Tasks</h1>
             <ul>
-                 <li><a class="tocitem2" id="mkuser" href="user.jsp?action=new">Create new user...</a></li>
-                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit user...</a></li>
-                 <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete user!</a></li>
+                <li><a class="tocitem2" id="mkuser" href="${pageContext.request.contextPath}/admin/enrol.jsp">Enrol a student...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit student...</a></li>
+                <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete user!</a></li>
             </ul>
         </aside>
         <main>
-            <h1 id="title">Welcome!</h1>
-            <h1>User account database</h1>
+            <h1 id="title">My Students</h1>
             <form id="tabulation" action="user.jsp" method="GET">
                 <input type="hidden" name="action" id="action" value="edit"/>
                 <input type="hidden" name="admin" id="admin" value="<%= adm %>"/>
@@ -106,7 +105,7 @@
                         <th>Enrolled in</th>
                     </tr>
                     <%
-                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS WHERE USERTYPE = 0 ORDER BY USERLASTNAME ASC");
+                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS INNER JOIN REGISTRATION ON USERS.USERID = REGISTRATION.REGISTRATIONWORKER WHERE USERTYPE = 0 ORDER BY USERLASTNAME ASC");
                         while (rs.next())
                         {
                     %>
@@ -114,7 +113,7 @@
                             <td><input type="radio" name="email" value="<%= rs.getString("USEREMAIL") %>"></td>
                             <td><%= rs.getString("USEREMAIL") %></td>
                             <td><%= rs.getString("USERLASTNAME").toUpperCase() %>, <%= rs.getString("USERGIVENNAME") %></td>
-                            <td>TBD</td> <!-- Enrolment criterion: the student has at least one of the activities in a course -->
+                            <td>TBD</td>
                         </tr>
                     <%
                         }
@@ -123,13 +122,7 @@
                 <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
         </main>
-        <aside class="column" id="right">
-            <h1>User account information</h1>
-            <ul>
-                <li><p class="tocitem1"><%= currUser %></p></li>
-                <li><p class="tocitem2"><%= appelation %></p></li>
-            </ul>
-        </aside>
+        <%@ include file="/assets/rightbar.jsp" %>
         <%@ include file="/assets/footer.jsp" %>
         <script> 
             function updateThings()
@@ -158,13 +151,12 @@
             function delUser() // beware the pipeline! javascript -> jakarta -> java -> jdbc
             {
                 if
-                (confirm("Are you sure you want to delete '"
+                (confirm("Are you sure you want to dematriculate '"
                         + document.querySelector("input[name=email]:checked").value + "'?"
-                        + "\nThis user will be lost forever! (A long time!)"))
+                        + "\nThis student's history will be lost forever! (A long time!)"))
                 {        
                     let form = document.getElementById("tabulation");
                     document.getElementById("action").value = "delete";
-                    document.querySelectorAll("input[name=email]").forEach(x => { x.name="username"; });
                     form.action = "clerk"; form.method = "POST";
                     form.submit();
                 }

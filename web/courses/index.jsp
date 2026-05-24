@@ -3,6 +3,7 @@
     Created on : 01-Mar-2026, 18:36:21
     Author     : Adrian
 --%>
+<%@page import="test.warden.*"%>
 <%@page import="java.sql.*"%>
 <% 
     response.setHeader("Cache-Control","no-cache, no-store, must-revalidate"); // HTTP 1.1
@@ -31,6 +32,7 @@
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
     String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
+    byte[] currId = res.getBytes("USERID");
     int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
@@ -40,10 +42,7 @@
         case 0: default: break;
     }
     
-    boolean adm = type == 2;
     pstm.close();
-    
-    if (!adm) { response.sendError(403); return; }
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -86,35 +85,42 @@
         <%@ include file="/assets/header.jsp" %>
         <aside class="column" id="left">
             <h1>Tasks</h1>
+            <% if (type >= 1) { %>
             <ul>
-                <li><a class="tocitem2" id="mkuser" href="user.jsp?action=new">Create new user...</a></li>
-                <li><a class="tocitem2" id="mkuser" href="enrol.jsp">Enrol a member...</a></li>
-                <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit user...</a></li>
-                <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete user!</a></li>
+                 <li><a class="tocitem2" id="mkuser" href="overview.jsp?action=new">Create new course...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out course...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit course...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete course!</a></li>
             </ul>
+            <% } else { %>
+            <ul>
+                 <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out course...</a></li>
+            </ul>
+            <% } %>
         </aside>
         <main>
-            <h1 id="title">User list</h1>
-            <form id="tabulation" action="user.jsp" method="GET">
+            <h1 id="title">Course List</h1>
+            <form id="tabulation" action="overview.jsp" method="GET">
                 <input type="hidden" name="action" id="action" value="edit"/>
-                <input type="hidden" name="admin" id="admin" value="<%= adm %>"/>
+                <input type="hidden" name="department" id="department" value="course"/>
                 <table id='systemtabulation'>
                     <tr>
                         <th></th>
-                        <th>Email address</th>
-                        <th>Name</th>
-                        <th>User type</th>
+                        <th>Course name</th>
                     </tr>
-                    <%
-                        ResultSet rs = con.createStatement().executeQuery("SELECT * FROM USERS ORDER BY USERLASTNAME ASC");
+                    <%                        
+                        ResultSet rs = null; 
+
+                        String quer = "SELECT * FROM COURSES "+ (type < 2? "INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ?":null) +" ORDER BY COURSEID ASC";
+                        PreparedStatement ps1 = con.prepareStatement(quer); if (type < 2) ps1.setBytes(1, currId);
+                        rs = ps1.executeQuery();
+                        
                         while (rs.next())
-                        {
+                        { String b6 = Base64.getEncoder().encodeToString(rs.getBytes("COURSEID"));
                     %>
-                        <tr onclick="pickMe('<%= rs.getString("USEREMAIL") %>')">
-                            <td><input type="radio" name="email" value="<%= rs.getString("USEREMAIL") %>"></td>
-                            <td><%= rs.getString("USEREMAIL") %></td>
-                            <td><%= rs.getString("USERLASTNAME").toUpperCase() %>, <%= rs.getString("USERGIVENNAME") %></td>
-                            <td><%= rs.getInt("USERTYPE") == 2? "Administrator":rs.getInt("USERTYPE") == 1?"Teacher":"Student" %></td>
+                        <tr onclick="pickMe('<%= b6 %>')">
+                            <td><input type="radio" name="id" value="<%= b6 %>"></td>
+                            <td><%= rs.getString("COURSENAME") %></td>
                         </tr>
                     <%
                         }
@@ -128,24 +134,23 @@
         <script> 
             function updateThings()
             {
-                if (document.querySelector('input[name="email"]:checked'))
+                if (document.querySelector('input[name="id"]:checked'))
                 {
-                    document.getElementById("eduser").classList.remove("tocitemdisabled");
-                    if (document.querySelector('input[name="email"]:checked').value !== "<%= currUser %>")
-                        document.getElementById("deluser").classList.remove("tocitemdisabled");
-                    else document.getElementById("deluser").classList.add("tocitemdisabled");        
-                        
+                    <% if (type >= 1) { %> document.getElementById("eduser").classList.remove("tocitemdisabled"); <% } %>
+                    <% if (type >= 1) { %> document.getElementById("deluser").classList.remove("tocitemdisabled"); <% } %>
+                    document.getElementById("gouser").classList.remove("tocitemdisabled");       
                 }
                 else
                 {
-                    document.getElementById("eduser").classList.add("tocitemdisabled");
-                    document.getElementById("deluser").classList.add("tocitemdisabled");                    
+                    <% if (type >= 1) { %> document.getElementById("eduser").classList.add("tocitemdisabled"); <% } %>
+                    <% if (type >= 1) { %> document.getElementById("deluser").classList.add("tocitemdisabled"); <% } %>                
+                    document.getElementById("gouser").classList.add("tocitemdisabled");    
                 }
             }
 
             function pickMe(where)
             {
-                document.querySelector('input[name=email][value="'+where+'"]').checked = true;
+                document.querySelector('input[name=id][value="'+where+'"]').checked = true;
                 updateThings(); // don't forget to fire event
             } 
             
@@ -153,21 +158,26 @@
             {
                 if
                 (confirm("Are you sure you want to delete '"
-                        + document.querySelector("input[name=email]:checked").value + "'?"
-                        + "\nThis user will be lost forever! (A long time!)"))
+                        + document.querySelector("input[name=id]:checked").value + "'?"
+                        + "\nThis activity will be lost forever! (A long time!)"))
                 {        
                     let form = document.getElementById("tabulation");
                     document.getElementById("action").value = "delete";
-                    document.querySelectorAll("input[name=email]").forEach(x => { x.name="username"; });
-                    form.action = "${pageContext.request.contextPath}/clerk?department=user"; form.method = "POST";
+                    form.action = "${pageContext.request.contextPath}/clerk"; form.method = "POST";
                     form.submit();
                 }
+            }
+            
+            function go()
+            {
+                let id = document.querySelector('input[name=id]:checked').value;
+                window.location.assign("${pageContext.request.contextPath}/activities/?id="+encodeURIComponent(id));
             }
             
             function report()
             {
                 let form = document.getElementById("tabulation");
-                form.action = "${pageContext.request.contextPath}/report?department=user"; form.method = "POST";
+                form.action = "${pageContext.request.contextPath}/report"; form.method = "POST";
                 form.submit(); 
             }
             

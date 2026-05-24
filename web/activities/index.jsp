@@ -3,6 +3,7 @@
     Created on : 01-Mar-2026, 18:36:21
     Author     : Adrian
 --%>
+<%@page import="test.warden.*"%>
 <%@page import="java.sql.*"%>
 <% 
     response.setHeader("Cache-Control","no-cache, no-store, must-revalidate"); // HTTP 1.1
@@ -30,7 +31,8 @@
     
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
-    String currUser = res.getString("USEREMAIL");
+    String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
+    byte[] currId = res.getBytes("USERID");
     int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
@@ -40,6 +42,8 @@
         case 0: default: break;
     }
     pstm.close();
+    
+    boolean local = false;
 %>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page session="false"%>
@@ -81,39 +85,119 @@
     <body>
         <%@ include file="/assets/header.jsp" %>
         <aside class="column" id="left">
+            <h1>Tasks</h1>
             <% if (type >= 1) { %>
-            <h1>Server tasks</h1>
             <ul>
                  <li><a class="tocitem2" id="mkuser" href="overview.jsp?action=new">Create new activity...</a></li>
                  <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Edit activity...</a></li>
                  <li><a class="tocitem2 tocitemdisabled" id="deluser" onclick="delUser()">Delete activity!</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out activity...</a></li>
             </ul>
             <% } else { %>
-            <h1>Server tasks</h1>
             <ul>
-                 <li><a class="tocitem2 tocitemdisabled" id="eduser" onclick="document.getElementById('tabulation').submit()">Check out activity...</a></li>
+                 <li><a class="tocitem2 tocitemdisabled" id="gouser" onclick="go()">Check out activity...</a></li>
             </ul>
             <% } %>
         </aside>
         <main>
             <h1 id="title">Activity List</h1>
+            <%                        
+                System.out.println("Initialised rset");
+                ResultSet rs = null; String courseName = null, courseDesc = null;
+
+                System.out.println("Initialised query");
+                String quer = "SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID ORDER BY ACTIVITYID ASC";
+                
+                // SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES
+                // INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID
+                // INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT
+                // WHERE REGISTRATIONWORKER = ?
+                // ORDER BY ACTIVITYID ASC
+                if (request.getParameter("id")!=null)
+                {
+                    System.out.println("ps1");
+                    PreparedStatement ps1 = con.prepareStatement("SELECT * FROM COURSES WHERE COURSEID=?");
+                    byte[] id = Base64.getDecoder().decode(request.getParameter("id"));
+                    ps1.setBytes(1, id);
+                    ResultSet rs1 = ps1.executeQuery();
+
+                    boolean f = false; while (rs1.next())
+                    {
+                        f = true; courseName = rs1.getString("COURSENAME");
+                        courseDesc = rs1.getString("COURSEDESCRIPTION");
+                    }
+                    if (!f) throw new ServletException(new UsernameNotFoundException()); // temporary
+                    
+                    System.out.println("ps2");
+                    quer = "SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID WHERE COURSEID = ? ORDER BY ACTIVITYID ASC";
+                    ps1.close();
+                    PreparedStatement ps2 = con.prepareStatement(quer);
+                    ps2.setBytes(1,id);
+                    rs = ps2.executeQuery();
+
+                    local = true;
+                }
+                else if (type < 2)
+                {
+                    if (request.getParameter("id")!=null)
+                    {
+                        System.out.println("ps1");
+                        PreparedStatement ps1 = con.prepareStatement("SELECT * FROM COURSES WHERE COURSEID=?");
+                        byte[] id = Base64.getDecoder().decode(request.getParameter("id"));
+                        ps1.setBytes(1, id);
+                        ResultSet rs1 = ps1.executeQuery();
+
+                        boolean f = false; while (rs1.next())
+                        {
+                            f = true; courseName = rs1.getString("COURSENAME");
+                            courseDesc = rs1.getString("COURSEDESCRIPTION");
+                        }
+                        if (!f) throw new ServletException(new UsernameNotFoundException()); // temporary
+
+                        System.out.println("ps2");
+                        quer = "SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ? AND COURSEID = ? ORDER BY ACTIVITYID ASC";
+                        ps1.close();
+                        PreparedStatement ps2 = con.prepareStatement(quer);
+                        ps2.setBytes(1,currId);
+                        ps2.setBytes(2,id);
+                        rs = ps2.executeQuery();
+
+                        local = true;
+                    }
+                    else
+                    {
+                        quer = "SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID INNER JOIN REGISTRATION ON COURSES.COURSEID = REGISTRATION.REGISTRATIONSUBJECT WHERE REGISTRATIONWORKER = ? ORDER BY ACTIVITYID ASC";
+                        PreparedStatement ps2 = con.prepareStatement(quer);
+                        ps2.setBytes(1,currId);
+                        rs = ps2.executeQuery();
+                    }
+                }
+                else rs = con.createStatement().executeQuery(quer);
+
+                System.out.println("succ");
+            %>
+            <% if (local) { %>
+            <h2><%= courseName %></h2>
+            <p><%= courseDesc %></p>
+            <% } %>
             <form id="tabulation" action="overview.jsp" method="GET">
                 <input type="hidden" name="action" id="action" value="edit"/>
+                <input type="hidden" name="department" id="department" value="activity"/>
                 <table id='systemtabulation'>
+
                     <tr>
                         <th></th>
                         <th>Activity name</th>
-                        <th>Part of course</th>
+                        <% if (!local) { %><th>Part of course</th><% } %>
                     </tr>
                     <%
-                        ResultSet rs = con.createStatement().executeQuery("SELECT ACTIVITYID, ACTIVITYNAME, COURSENAME FROM ACTIVITIES INNER JOIN COURSES ON ACTIVITIES.ACTIVITYPARENT=COURSES.COURSEID ORDER BY ACTIVITYID ASC");
                         while (rs.next())
                         { String b6 = Base64.getEncoder().encodeToString(rs.getBytes("ACTIVITYID"));
                     %>
                         <tr onclick="pickMe('<%= b6 %>')">
                             <td><input type="radio" name="id" value="<%= b6 %>"></td>
                             <td><%= rs.getString("ACTIVITYNAME") %></td>
-                            <td><%= rs.getString("COURSENAME") %></td>
+                            <% if (!local) { %><td><%= rs.getString("COURSENAME") %></td> <% } %>
                         </tr>
                     <%
                         }
@@ -122,26 +206,22 @@
                 <input type="button" name="reportgen" id="reportgen" value="Generate report" onclick="report()"/>
             </form>
         </main>
-        <aside class="column" id="right">
-            <h1>User account information</h1>
-            <ul>
-                <li><p class="tocitem1"><%= currUser %></p></li>
-                <li><p class="tocitem2"><%= appelation %></p></li>
-            </ul>
-        </aside>
+        <%@ include file="/assets/rightbar.jsp" %>
         <%@ include file="/assets/footer.jsp" %>
         <script> 
             function updateThings()
             {
                 if (document.querySelector('input[name="id"]:checked'))
                 {
-                    document.getElementById("eduser").classList.remove("tocitemdisabled");
-                    document.getElementById("deluser").classList.remove("tocitemdisabled");                     
+                    <% if (type >= 1) { %> document.getElementById("eduser").classList.remove("tocitemdisabled"); <% } %>
+                    <% if (type >= 1) { %> document.getElementById("deluser").classList.remove("tocitemdisabled"); <% } %>              
+                    document.getElementById("gouser").classList.remove("tocitemdisabled");                    
                 }
                 else
                 {
-                    document.getElementById("eduser").classList.add("tocitemdisabled");
-                    document.getElementById("deluser").classList.add("tocitemdisabled");                    
+                    <% if (type >= 1) { %> document.getElementById("eduser").classList.add("tocitemdisabled"); <% } %>
+                    <% if (type >= 1) { %> document.getElementById("deluser").classList.add("tocitemdisabled"); <% } %>             
+                    document.getElementById("gouser").classList.add("tocitemdisabled");    
                 }
             }
 
@@ -160,16 +240,21 @@
                 {        
                     let form = document.getElementById("tabulation");
                     document.getElementById("action").value = "delete";
-                    document.querySelectorAll("input[name=id]").forEach(x => { x.name="username"; });
-                    form.action = "clerk?department=activity"; form.method = "POST";
+                    form.action = "${pageContext.request.contextPath}/clerk"; form.method = "POST";
                     form.submit();
                 }
+            }
+            
+            function go()
+            {
+                let id = document.querySelector('input[name=id]:checked').value;
+                window.location.assign("${pageContext.request.contextPath}/activities/view.jsp?id="+encodeURIComponent(id));
             }
             
             function report()
             {
                 let form = document.getElementById("tabulation");
-                form.action = "report?department=activity"; form.method = "POST";
+                form.action = "${pageContext.request.contextPath}/report"; form.method = "POST";
                 form.submit(); 
             }
             

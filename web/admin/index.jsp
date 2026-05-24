@@ -30,7 +30,7 @@
     
     PreparedStatement pstm = con.prepareStatement("SELECT * FROM USERS WHERE USEREMAIL = ?");
     pstm.setString(1, sesh.getAttribute("username").toString()); ResultSet res = pstm.executeQuery(); res.next();
-    String currUser = res.getString("USEREMAIL");
+    String currUserEmail = res.getString("USEREMAIL"), currUser = res.getString("USERLASTNAME").toUpperCase() + ", " + res.getString("USERGIVENNAME");
     int type = res.getInt("USERTYPE");
     String appelation = "Student";
     switch (type)
@@ -98,13 +98,7 @@
                 </button>
             </div>
         </main>
-        <aside class="column" id="right">
-            <h1>User account information</h1>
-            <ul>
-                <li><p class="tocitem1"><%= currUser %></p></li>
-                <li><p class="tocitem2"><%= appelation %></p></li>
-            </ul>
-        </aside>
+        <%@ include file="/assets/rightbar.jsp" %>
         <%@ include file="/assets/footer.jsp" %>
         <script> 
             function report()
