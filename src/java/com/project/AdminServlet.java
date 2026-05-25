@@ -44,7 +44,8 @@ public class AdminServlet extends HttpServlet {
             } 
             else if ("insert".equals(action)) {
                 String encryptedPass = CryptoUtil.encrypt(targetPass, secretKey, cipherAlgorithm);
-                ps = conn.prepareStatement("INSERT INTO USERS (username, password, role) VALUES (?, ?, ?)");
+                // UPDATED: include created_date for time-bound reports
+                ps = conn.prepareStatement("INSERT INTO USERS (username, password, role, created_date) VALUES (?, ?, ?, CURRENT_DATE)");
                 ps.setString(1, targetUser);
                 ps.setString(2, encryptedPass);
                 ps.setString(3, targetRole);
@@ -65,8 +66,8 @@ public class AdminServlet extends HttpServlet {
             response.sendRedirect("success.jsp");
 
         } catch (Exception e) {
-            e.printStackTrace();
-            response.getWriter().println("Database operation failed: " + e.getMessage());
+            e.printStackTrace();   // still log to server console
+            response.sendRedirect("error_db.jsp");   // user-friendly redirect
         }
     }
 }
