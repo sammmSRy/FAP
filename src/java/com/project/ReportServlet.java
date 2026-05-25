@@ -135,7 +135,7 @@ public class ReportServlet extends HttpServlet {
         conn.close();
 
         // Pagination: max 40 rows per page
-        int rowsPerPage = 40;   
+        int rowsPerPage = 51;   
         int totalRows = rows.size();
         int totalPages = (int) Math.ceil((double) totalRows / rowsPerPage);
         int pageNum = 0;
