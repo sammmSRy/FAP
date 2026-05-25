@@ -7,7 +7,7 @@
 
     <context-param>
         <param-name>headerTitle</param-name>
-        <param-value>My Secure Login Portal</param-value>
+        <param-value>Active Learning Management</param-value>
     </context-param>
     <context-param>
         <param-name>footerInfo</param-name>
